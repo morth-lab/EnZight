@@ -161,19 +161,27 @@ def extract_highest_results(tresshold, number_of_templates, tmp_dir, result_dir,
     return template_files
 
 
+
 def foldseek_API_search(foldseek_mode, foldseek_databases, query, result_dir, tmp_dir, foldseek_threshold, numb_templates, log_file_path):
-    databases = ""
-    for database in foldseek_databases:
-        databases += f' -F "database[]={database}"'
-    foldseekAPI = f'curl -X POST -F "q=@{query}" -F "mode={foldseek_mode}"{databases} https://search.foldseek.com/api/ticket'
-    result = subprocess.run(foldseekAPI, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    try:
-        ticket = result.stdout.split('"')[3]
-        log_message(log_file_path, f"Foldseek ticket: {ticket}")
-    except:
-        result = subprocess.run(foldseekAPI, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        ticket = result.stdout.split('"')[3]
-    url = f"https://search.foldseek.com/api/ticket/{ticket}"
+    #databases = ""
+    #for database in foldseek_databases:
+    #    databases += f' -F "database[]={database}"'
+    #foldseekAPI = f'curl -X POST -F "q=@{query}" -F "mode={foldseek_mode}"{databases} https://search.foldseek.com/api/ticket'
+    #result = subprocess.run(foldseekAPI, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    url = "https://search.foldseek.com/api/ticket"
+    with open(query, "rb") as f:
+        files = { "q": f }
+        data = [("mode", foldseek_mode)] + [("database[]", x) for x in foldseek_databases]
+        response = requests.post(url, files=files, data=data)
+    ticket = response.json()["id"]
+    log_message(log_file_path, f"Foldseek ticket: {ticket}")
+    #try:
+    #    ticket = result.stdout.split('"')[3]
+    #    log_message(log_file_path, f"Foldseek ticket: {ticket}")
+    #except:
+    #    result = subprocess.run(foldseekAPI, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    #    ticket = result.stdout.split('"')[3]
+    url = url+ticket
     # To check status of run
     response = requests.get(url)
     web_content = response.text
