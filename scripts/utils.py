@@ -181,10 +181,11 @@ def foldseek_API_search(foldseek_mode, foldseek_databases, query, result_dir, tm
     #except:
     #    result = subprocess.run(foldseekAPI, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     #    ticket = result.stdout.split('"')[3]
-    url = url+ticket
+    url = url+"/"+ticket
     # To check status of run
     response = requests.get(url)
     web_content = response.text
+    #print(web_content)
     # wait until foldseek search is complete:
     while not web_content.endswith('"COMPLETE"}\n'):
         time.sleep(2)
