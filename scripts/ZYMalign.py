@@ -67,8 +67,28 @@ def main():
         "--FOLDSEEK_DATABASES",
         nargs="+",
         choices=["afdb50", "afdb_swissprot", "afdb_proteome", "pdb100"],
-        default=["afdb50"],
+        default=[],
         help="Foldseek databases (only necessary for foldseek search method). Default: afdb50."
+    )
+    parser.add_argument(
+        "--afdb50",
+        action="store_true",
+        help="Use afdb50 database for foldseek search method."
+    )
+    parser.add_argument(
+        "--afdb_swissprot",
+        action="store_true",
+        help="Use afdb_swissprot database for foldseek search method."
+    )
+    parser.add_argument(
+        "--afdb_proteome",
+        action="store_true",
+        help="Use afdb_proteome database for foldseek search method."
+    )
+    parser.add_argument(
+        "--pdb100",
+        action="store_true",
+        help="Use pdb100 database for foldseek search method."
     )
     parser.add_argument(
         "-fm",
@@ -137,7 +157,17 @@ def main():
         os.rename(old_query_path, new_query_path)
 
 
-                
+    if args.FOLDSEEK_DATABASES == []:
+        if args.afdb50:
+            args.FOLDSEEK_DATABASES.append("afdb50")
+        if args.afdb_swissprot:
+            args.FOLDSEEK_DATABASES.append("afdb_swissprot")
+        if args.afdb_proteome:
+            args.FOLDSEEK_DATABASES.append("afdb_proteome")
+        if args.pdb100:
+            args.FOLDSEEK_DATABASES.append("pdb100")
+        if args.FOLDSEEK_DATABASES == []:
+            args.FOLDSEEK_DATABASES = ["afdb50"]      
 
     # Validate arguments and inputs
     if not validate_structure_file(args.QUERY):
