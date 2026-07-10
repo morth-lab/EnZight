@@ -1,7 +1,7 @@
 '''
 http://pymolwiki.org/index.php/FindSurfaceResidues
 
-Modified to fit the SIMalign algorithm
+Modified to fit the ZYMalign algorithm
 '''
 
 

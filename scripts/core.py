@@ -10,9 +10,9 @@ from utils import run_muscle, write_fasta, alignment_to_dict, update_msa, log_me
 from models import StructureFile, Structure
 
 
-def SIMalign(query, job_key, result_dir, tmp_dir="tmp", templates=None, homology_search_method="foldseek", max_dist=6, max_rmsd=5, 
-             foldseek_databases=["afdb50"], foldseek_mode="tmalign", foldseek_threshold=0.7, numb_templates=20, BLOSUM="BLOSUM62", only_core="1", muscle_path=None, log_file_path=None):
-    """Run the SIMalign prediction algorithm."""
+def ZYMalign(query, job_key, result_dir, tmp_dir="tmp", homologs=None, homology_search_method="foldseek", max_dist=6, max_rmsd=5, 
+             foldseek_databases=["afdb50"], foldseek_mode="tmalign", foldseek_threshold=0.7, numb_homologs=20, BLOSUM="BLOSUM62", only_core="1", muscle_path=None, log_file_path=None):
+    """Run the ZYMalign prediction algorithm."""
 
 
 
@@ -21,13 +21,13 @@ def SIMalign(query, job_key, result_dir, tmp_dir="tmp", templates=None, homology
     structure_files = [query_file]
 
     if homology_search_method == "user_specified":
-        for template in templates:
-            basename = os.path.basename(template).split(".")
-            structure_files.append(StructureFile(basename[0], template, basename[1]))
+        for homolog in homologs:
+            basename = os.path.basename(homolog).split(".")
+            structure_files.append(StructureFile(basename[0], homolog, basename[1]))
 
     elif homology_search_method == "foldseek":
         log_message(log_file_path, "Running foldseek...")
-        structure_files += foldseek_API_search(foldseek_mode, foldseek_databases, query, result_dir, tmp_dir, foldseek_threshold, numb_templates, log_file_path)
+        structure_files += foldseek_API_search(foldseek_mode, foldseek_databases, query, result_dir, tmp_dir, foldseek_threshold, numb_homologs, log_file_path)
      
 
 
@@ -100,5 +100,5 @@ def SIMalign(query, job_key, result_dir, tmp_dir="tmp", templates=None, homology
         select_hotspots_in_pymol(double_hotspots, structures, align, cmd, mode=2)
 
   
-        cmd.save(os.path.join(result_dir,"SIMalign_"+job_key+".pse"))
+        cmd.save(os.path.join(result_dir,"ZYMalign_"+job_key+".pse"))
  

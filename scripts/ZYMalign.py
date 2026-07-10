@@ -1,6 +1,6 @@
 import argparse
 import os
-from core import SIMalign
+from core import ZYMalign
 import sys
 from utils import validate_structure_file, encrypt_key, create_output_dirs, log_message, detect_structure_format
 import shutil
@@ -20,18 +20,18 @@ def main():
         help="Required argument! Path to the query protein structure file (.pdb or .cif)."
     )
     parser.add_argument(
-        "-t",
-        "--TEMPLATES",
+        "-hom",
+        "--HOMOLOGS",
         nargs="+",
         default=None,
-        help="List of paths to files used as templates for the query file (only required for user-specified homology search method)."
+        help="List of paths to files used as homologs for the query file (only required for user-specified homology search method)."
     )  
     parser.add_argument(
-        "-t-dir",
-        "--TEMPLATES_DIR",
+        "-hom-dir",
+        "--HOMOLOGS_DIR",
         type=str,
         default=None,
-        help="Folder with files used as templates for the query file (only required for user-specified homology search method)."
+        help="Folder with files used as homologs for the query file (only required for user-specified homology search method)."
     ) 
     parser.add_argument(
         "-j",
@@ -46,7 +46,7 @@ def main():
         type=str,
         default="foldseek",
         choices=['foldseek', 'user_specified'],
-        help="Method used to fetch homologue templates for usage in the program. Choose either foldseek or user_specified. (default is foldseek)."
+        help="Method used to fetch homologs for usage in the program. Choose either foldseek or user_specified. (default is foldseek)."
     )
     parser.add_argument(
         "-d",
@@ -86,11 +86,11 @@ def main():
         help="Foldseek threshold (either TM or E-value threshold depending on Foldseek mode)."
     )
     parser.add_argument(
-        "-nt",
-        "--NUMB_TEMPLATES",
+        "-nh",
+        "--NUMB_HOMOLOGS",
         type=int,
         default=20,
-        help="Number of top performing Foldseek homologs based on (TM or E-value depending on Foldseek mode) that is used in the SIMalign algorithm."
+        help="Number of top performing Foldseek homologs based on (TM or E-value depending on Foldseek mode) that is used in the ZYMalign algorithm."
     )
 
     parser.add_argument(
@@ -113,7 +113,7 @@ def main():
         type=str,
         default="BLOSUM62",
         choices=["BLOSUM50","BLOSUM62"],
-        help="BLOSUM matrix used for sequence alignemnt."
+        help="BLOSUM matrix used for sequence alignment."
     )
     parser.add_argument(
         "--only_core",
@@ -146,42 +146,42 @@ def main():
 
 
     if args.HOMOLOGY_SEARCH_METHOD == "user_specified":
-        if args.TEMPLATES is None and args.TEMPLATES_DIR is None:
-            print(f'<p style="color:red;"><b>ERROR:</b> Please provide either a list of template files or a directory containing template files when using user-specified homology search method.</p>')
+        if args.HOMOLOGS is None and args.HOMOLOGS_DIR is None:
+            print(f'<p style="color:red;"><b>ERROR:</b> Please provide either a list of homolog files or a directory containing homolog files when using user-specified homology search method.</p>')
             sys.exit(1)
-        elif args.TEMPLATES is not None:
-            templates = args.TEMPLATES
+        elif args.HOMOLOGS is not None:
+            homologs = args.HOMOLOGS
             
         else:
-            templates = [os.path.join(args.TEMPLATES_DIR, temp_file) for temp_file in os.listdir(args.TEMPLATES_DIR)]
-        if len(templates) < 2:
-            print(templates)
-            print(f'<p style="color:red;"><b>ERROR:</b> Please provide 2 or more template files when using user-specified homology search method.</p>')
+            homologs = [os.path.join(args.HOMOLOGS_DIR, hom_file) for hom_file in os.listdir(args.HOMOLOGS_DIR)]
+        if len(homologs) < 2:
+            print(homologs)
+            print(f'<p style="color:red;"><b>ERROR:</b> Please provide 2 or more homolog files when using user-specified homology search method.</p>')
             sys.exit(1)
 
         # Change "0" extension to ".pdb" for web server
-        for i, temp_file in enumerate(templates):
+        for i, temp_file in enumerate(homologs):
             print(temp_file)
             if temp_file.endswith(".0"):
                 old_temp_file_path = temp_file
                 new_temp_file_path = detect_structure_format(old_temp_file_path)
                 temp_file = new_temp_file_path
-                print(f"Detected template file format for {old_temp_file_path}: {new_temp_file_path}")
+                print(f"Detected homolog file format for {old_temp_file_path}: {new_temp_file_path}")
                 if new_temp_file_path.endswith("0"):
-                    templates.pop(i)
+                    homologs.pop(i)
                     print(f'<p style="color:orange;"><b>WARNING:</b> Could not detect structure format for {old_temp_file_path}. This file will be skipped.</p>')
                     continue
                 # new_temp_file_path = temp_file
                 os.rename(old_temp_file_path, new_temp_file_path)
-                templates[i] = new_temp_file_path
+                homologs[i] = new_temp_file_path
             if not validate_structure_file(temp_file):
                 print(f'<p style="color:orange;"><b>WARNING:</b> Could not open or read {temp_file}</p>')
-                templates.remove(temp_file)
-        if len(templates) < 2:
-            print(f'<p style="color:red;"><b>ERROR:</b> After validating the template files, less than 2 valid template files remain. Please provide at least 2 valid template files.</p>')
+                homologs.remove(temp_file)
+        if len(homologs) < 2:
+            print(f'<p style="color:red;"><b>ERROR:</b> After validating the homolog files, less than 2 valid homolog files remain. Please provide at least 2 valid homolog files.</p>')
             sys.exit(1)
     else:
-        templates = None
+        homologs = None
 
 
     if args.MAX_DISTANCE <= 0:
@@ -196,8 +196,8 @@ def main():
         print(f'<p style="color:red;"><b>ERROR:</b> The Foldseek threshold (FOLDSEEK_THRESHOLD) must be between 0.0 and 1.0.</p>')
         sys.exit(1)
 
-    if args.NUMB_TEMPLATES < 2:
-        print(f'<p style="color:red;"><b>ERROR:</b> Please use 2 or more template files. NUMB_TEMPLATES must be greater than 2.</p>')
+    if args.NUMB_HOMOLOGS < 2:
+        print(f'<p style="color:red;"><b>ERROR:</b> Please use 2 or more homolog files. NUMB_HOMOLOGS must be greater than 2.</p>')
         sys.exit(1)
 
 
@@ -208,24 +208,24 @@ def main():
         sys.exit(1)
 
     tmp_dir, result_dir = create_output_dirs(args.RESULT_DIR, args.TMP_DIR)
-    zip_file_path = os.path.join(result_dir, f"{job_key}_simalign")
+    zip_file_path = os.path.join(result_dir, f"{job_key}_zymalign")
     os.makedirs(zip_file_path, exist_ok=True)
     log_file_path = os.path.join(zip_file_path, f"{args.JOB_KEY}_log.txt")
 
     settings = [
-        "SIMalign run settings:",
+        "ZYMalign run settings:",
         f"Query = {args.QUERY}",
         f"job_key = {args.JOB_KEY}",
         f"result_dir = {args.RESULT_DIR}",
         f"tmp_dir = {args.TMP_DIR}",
-        f"templates = {templates}",
+        f"homologs = {homologs}",
         f"homology_search_method = {args.HOMOLOGY_SEARCH_METHOD}",
         f"max_dist = {args.MAX_DISTANCE}",
         f"max_rmsd = {args.MAX_RMSD}",
         f"foldseek_databases = {args.FOLDSEEK_DATABASES}",
         f"foldseek_mode = {args.FOLDSEEK_MODE}",
         f"foldseek_threshold = {args.FOLDSEEK_THRESHOLD}",
-        f"numb_templates = {args.NUMB_TEMPLATES}",
+        f"numb_homologs = {args.NUMB_HOMOLOGS}",
         f"BLOSUM = {args.BLOSUM}",
         f"only_core = {args.only_core}",
         f"muscle_path = {muscle_path}",
@@ -235,19 +235,19 @@ def main():
 
 
 
-    # Run SIMalign
-    SIMalign(query=args.QUERY,
+    # Run ZYMalign
+    ZYMalign(query=args.QUERY,
              job_key=args.JOB_KEY,
              result_dir=zip_file_path,
              tmp_dir=tmp_dir,
-             templates=templates,
+             homologs=homologs,
              homology_search_method=args.HOMOLOGY_SEARCH_METHOD,
              max_dist=args.MAX_DISTANCE,
              max_rmsd=args.MAX_RMSD,
              foldseek_databases=args.FOLDSEEK_DATABASES,
              foldseek_mode=args.FOLDSEEK_MODE,
              foldseek_threshold=args.FOLDSEEK_THRESHOLD,
-             numb_templates=args.NUMB_TEMPLATES,
+             numb_homologs=args.NUMB_HOMOLOGS,
              BLOSUM=args.BLOSUM,
              only_core=args.only_core,
              muscle_path=muscle_path,
@@ -261,7 +261,7 @@ def main():
 
     document_root = "/var/www/services"
     download_path = zip_file_path.replace(document_root, "")
-    print('<img src="https://raw.githubusercontent.com/morth-lab/SIMalign/main/logo.png" width="200">')
+    print('<img src="https://raw.githubusercontent.com/morth-lab/ZYMalign/main/logo.png" width="200">')
     print(f'<a href="{download_path}.zip" download>Download here</a>')
 
 

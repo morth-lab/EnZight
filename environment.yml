@@ -1,4 +1,4 @@
-name: simalign_env
+name: zymalign_env
 channels:
   - bioconda
   - conda-forge

@@ -2,7 +2,8 @@
 
 [Webserver](https://services.healthtech.dtu.dk/services/SIMAlign-1.0/)
 
-SIMalign is a Python command-line tool for protein structure alignment and hotspot prediction. It integrates both automated homology search via Foldseek and user-specified templates, performs structural superposition, calculates similarity scores, and identifies hotspots suitable for mutagenesis. Results are visualized in PyMOL and exported in multiple formats for downstream analysis.
+ZYMalign is a structural alignment tool for identifying non-disrupting amino acid substitutions, referred to as substitution hotspots, from homologous protein structures. The program uses either Foldseek-detected homologs or user-specified homologs to generate structural alignments and residue-level similarity scores. In parallel, ZYMalign generates a multiple sequence alignment that is refined using structural information to produce a structure-based multiple sequence alignment (SB-MSA), which is used to identify substitution hotspots.
+
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -11,8 +12,8 @@ SIMalign is a Python command-line tool for protein structure alignment and hotsp
 * Automatic homology search with **Foldseek** or user-specified templates
 * Supports `.pdb` and `.cif` file formats
 * Gap recognition and RMSD filtering for precise alignment
-* Similarity scoring using customizable **BLOSUM** matrices
-* Hotspot prediction for single and double mutations
+* Similarity scoring using **BLOSUM** matrices
+* Hotspot prediction for single and double substitutions
 * PyMOL session generation (`.pse`) for interactive visualization
 * Outputs: JSON scores, HTML hotspot reports, Clustal alignments
 
@@ -22,22 +23,22 @@ SIMalign is a Python command-line tool for protein structure alignment and hotsp
 > **Note:** Do **not** include any spaces in the path where you clone the repo.
 
 ```bash
-git clone https://github.com/morth-lab/SIMalign.git
-cd SIMalign
+git clone https://github.com/morth-lab/ZYMalign.git
+cd ZYMalign
 ```
 
 ### 2. Conda environment
 
 ```bash
 conda env create -f environment.yml
-conda activate simalign_env
+conda activate zymalign_env
 ```
 
 
 ## Usage
 
 ```bash
-python scripts/simalign --QUERY query.pdb [options]
+python scripts/ZYMalign.py --QUERY query.pdb [options]
 ```
 
 
@@ -46,39 +47,52 @@ python scripts/simalign --QUERY query.pdb [options]
 | Option (`-short`)               | Description                                                        | Default       |
 | ------------------------------- | ------------------------------------------------------------------ | ------------- |
 | `--QUERY` `-q`                  | Path to input structure file (`.pdb` or `.cif`). **Required**      | —             |
-| `--TEMPLATES` `-t`              | One or more template files (for `user_specified`).                 | `None`        |
-| `--TEMPLATES_DIR` `-t-dir`      | Directory of template files (for `user_specified`).                | `None`        |
+| `--HOMOLOGS` `-hom`              | Two or more homolog files (for `user_specified`).                 | `None`        |
+| `--HOMOLOGS_DIR` `-hom-dir`      | Directory of homolog files (for `user_specified`).                | `None`        |
 | `--HOMOLOGY_SEARCH_METHOD` `-H` | `foldseek` or `user_specified`.                                    | `foldseek`    |
-| `--MAX_DISTANCE` `-d`           | Distance threshold for gap detection (Å).                          | `7`           |
-| `--MAX_RMSD` `-r`               | Maximum RMSD for template filtering (Å).                           | `5`           |
+| `--MAX_DISTANCE` `-d`           | Distance threshold for gap detection (Å).                          | `5`           |
+| `--MAX_RMSD` `-r`               | Maximum RMSD for homolog filtering (Å).                           | `5`           |
 | `--FOLDSEEK_DATABASES` `-fd`    | Foldseek DBs (`afdb50`,`afdb_swissprot`,`afdb_proteome`,`pdb100`). | `afdb50`      |
 | `--FOLDSEEK_MODE` `-fm`         | `tmalign` or `3diaa`.                                              | `tmalign`     |
 | `--FOLDSEEK_THRESHOLD` `-ft`    | Foldseek score/E-value threshold.                                  | `0.7`         |
-| `--NUMB_TEMPLATES` `-nt`        | Number of top templates.                                           | `20`          |
+| `--NUMB_HOMOLOGS` `-nh`        | Number of top homologs.                                           | `20`          |
 | `--BLOSUM` `-b`                 | BLOSUM matrix (`BLOSUM50`,`BLOSUM62`).                             | `BLOSUM62`    |
 | `--RESULT_DIR` `-R`             | Directory for results.                                             | `./<JOB_KEY>` |
 | `--TMP_DIR` `-tmp`              | Directory for temporary files.                                     | `./tmp`       |
 | `--JOB_KEY` `-j`                | Job name key. Auto-generated if omitted.                           | random        |
 | `--only_core`  	                | If set to 1, only hotspots in the core of the protein will be considered.  | `1` |
 
-<!-- | `--SEQUENCE_IDENTITY` `-sident` | Min. identity for BLASTp (0–1).                                    | `0.6`         |
-| `--SEQUENCE_COV` `-scov`        | Min. coverage for BLASTp (0–1).                                    | `0.6`         |
-| `--E_VALUE` `-e`                | E-value threshold for BLASTp.                                      | `0.001`       |
-| `--REDUNDANCY_THRESHOLD` `-rt`  | MSA redundancy threshold (0–1).                                    | `0.9`         | -->
-
-Run `simalign --help` for full details.
 
 ## Output
 
-When complete, the output directory contains:
+ZYMalign produces two complementary outputs: an interactive PyMOL visualization and a ranked table of substitution hotspots.
 
-* `alignment.aln` – Multiple sequence alignment (Clustal format)
-* `scores.json` – Per-residue similarity scores
-* `hotspots_mode_1.html` – Single mutation hotspot report
-* `hotspots_mode_2.html` – Double mutation hotspot report
-* `SIMalign_<JOB_KEY>.pse` – PyMOL session file
+<img src="ZYMalign_output_figure.png" alt="Alt Text" height="auto">
 
-## Citation
+<h3>Interactive PyMOL visualization</h3>
+
+<p>
+The PyMOL session file enables interactive inspection of the structural alignment, residue-level similarity scores, and predicted substitution hotspots. The visualization is organized into synchronized sequence, structure, and selection panels. Selecting a substitution hotspot highlights the corresponding position in both the sequence and three-dimensional structure, making it possible to inspect the local structural environment of each candidate substitution.
+</p>
+
+<h3>Substitution hotspot table</h3>
+
+<p>
+The substitution hotspot table lists predicted non-disrupting amino acid substitutions ranked by their ZYMalign score. Substitutions with the lowest ZYMalign scores are shown at the top of the table, corresponding to less conserved positions that may be more likely to tolerate substitution. These top-ranked candidates provide a practical starting point for experimental mutagenesis.
+</p>
+
+<h3>Full list of all files:</h3>
+
+* `alignment.aln` – Structure-based multiple sequence alignment (Clustal format)
+* `hotspots_mode_1.html` – Single substitution hotspot report
+* `hotspots_mode_2.html` – Double substitution hotspot report
+* `scores.json` – Per-residue similarity scores (ZYMalign score)
+* `sequences.fasta` – Query and homolog sequences (fasta format)
+* `ZYMalign_<JOB_KEY>.pse` – PyMOL session file
+* `<JOB_KEY>_log.txt` – Log file
+* Homolog AlphaFold structures if you used `foldseek`
+
+<!-- ## Citation
 
 Please cite our [publication](https://services.healthtech.dtu.dk/services/SIMAlign-1.0/) if you use SIMalign:
 
@@ -90,13 +104,10 @@ Please cite our [publication](https://services.healthtech.dtu.dk/services/SIMAli
   year={2025},
   doi={10.1016/j.jmb.2025.03.012}
 }
-```
+``` -->
 
-## License
-
-Distributed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 
 * **PyMOL Script Repository** for `findSurfaceResidues.py`
-* Developed with support from ChatGPT (May 2025)
+* Developed with support from ChatGPT
