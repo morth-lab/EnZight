@@ -1,5 +1,5 @@
 <picture>
-  <source srcset="logo-dark.svg" media="(prefers-color-scheme: dark)">
+  <source srcset="logo_dark.svg" media="(prefers-color-scheme: dark)">
   <img src="logo.svg" alt="Alt Text" width="200">
 </picture>
 
