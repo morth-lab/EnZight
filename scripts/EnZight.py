@@ -1,6 +1,6 @@
 import argparse
 import os
-from core import ZYMalign
+from core import EnZight
 import sys
 from utils import validate_structure_file, encrypt_key, create_output_dirs, log_message, detect_structure_format
 import shutil
@@ -110,7 +110,7 @@ def main():
         "--NUMB_HOMOLOGS",
         type=int,
         default=20,
-        help="Number of top performing Foldseek homologs based on (TM or E-value depending on Foldseek mode) that is used in the ZYMalign algorithm."
+        help="Number of top performing Foldseek homologs based on (TM or E-value depending on Foldseek mode) that is used in the EnZight algorithm."
     )
 
     parser.add_argument(
@@ -238,12 +238,12 @@ def main():
         sys.exit(1)
 
     tmp_dir, result_dir = create_output_dirs(args.RESULT_DIR, args.TMP_DIR)
-    zip_file_path = os.path.join(result_dir, f"{job_key}_zymalign")
+    zip_file_path = os.path.join(result_dir, f"{job_key}_EnZight")
     os.makedirs(zip_file_path, exist_ok=True)
     log_file_path = os.path.join(zip_file_path, f"{args.JOB_KEY}_log.txt")
 
     settings = [
-        "ZYMalign run settings:",
+        "EnZight run settings:",
         f"Query = {args.QUERY}",
         f"job_key = {args.JOB_KEY}",
         f"result_dir = {args.RESULT_DIR}",
@@ -265,8 +265,8 @@ def main():
 
 
 
-    # Run ZYMalign
-    ZYMalign(query=args.QUERY,
+    # Run EnZight
+    EnZight(query=args.QUERY,
              job_key=args.JOB_KEY,
              result_dir=zip_file_path,
              tmp_dir=tmp_dir,
@@ -291,7 +291,7 @@ def main():
 
     document_root = "/var/www/services"
     download_path = zip_file_path.replace(document_root, "")
-    print('<img src="https://raw.githubusercontent.com/morth-lab/ZYMalign/main/logo.png" width="200">')
+    print('<img src="https://raw.githubusercontent.com/morth-lab/EnZight/main/logo.png" width="200">')
     print(f'<a href="{download_path}.zip" download>Download here</a>')
 
 

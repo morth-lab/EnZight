@@ -1,4 +1,4 @@
-python ../scripts/ZYMalign.py \
+python ../scripts/EnZight.py \
     --QUERY data/sRO10_AF.cif \
     --HOMOLOGS_DIR data/homologs \
     --HOMOLOGY_SEARCH_METHOD "user_specified" \

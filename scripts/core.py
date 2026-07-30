@@ -10,9 +10,9 @@ from utils import run_muscle, write_fasta, alignment_to_dict, update_msa, log_me
 from models import StructureFile, Structure
 
 
-def ZYMalign(query, job_key, result_dir, tmp_dir="tmp", homologs=None, homology_search_method="foldseek", max_dist=6, max_rmsd=5, 
+def EnZight(query, job_key, result_dir, tmp_dir="tmp", homologs=None, homology_search_method="foldseek", max_dist=6, max_rmsd=5, 
              foldseek_databases=["afdb50"], foldseek_mode="tmalign", foldseek_threshold=0.7, numb_homologs=20, BLOSUM="BLOSUM62", only_core="1", muscle_path=None, log_file_path=None):
-    """Run the ZYMalign prediction algorithm."""
+    """Run the EnZight prediction algorithm."""
 
 
 
@@ -100,5 +100,5 @@ def ZYMalign(query, job_key, result_dir, tmp_dir="tmp", homologs=None, homology_
         select_hotspots_in_pymol(double_hotspots, structures, align, cmd, mode=2)
 
         cmd.util.cnc()
-        cmd.save(os.path.join(result_dir,"ZYMalign_"+job_key+".pse"))
+        cmd.save(os.path.join(result_dir,"EnZight_"+job_key+".pse"))
  

@@ -5,7 +5,7 @@
 
 [Webserver](https://services.healthtech.dtu.dk/services/SIMAlign-1.0/)
 
-ZYMalign is a structural alignment tool for identifying non-disrupting amino acid substitutions, referred to as substitution hotspots, from homologous protein structures. The program uses either Foldseek-detected homologs or user-specified homologs to generate structural alignments and residue-level similarity scores. In parallel, ZYMalign generates a multiple sequence alignment that is refined using structural information to produce a structure-based multiple sequence alignment (SB-MSA), which is used to identify substitution hotspots.
+EnZight is a structural alignment tool for identifying non-disrupting amino acid substitutions, referred to as substitution hotspots, from homologous protein structures. The program uses either Foldseek-detected homologs or user-specified homologs to generate structural alignments and residue-level similarity scores. In parallel, EnZight generates a multiple sequence alignment that is refined using structural information to produce a structure-based multiple sequence alignment (SB-MSA), which is used to identify substitution hotspots.
 
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -26,22 +26,22 @@ ZYMalign is a structural alignment tool for identifying non-disrupting amino aci
 > **Note:** Do **not** include any spaces in the path where you clone the repo.
 
 ```bash
-git clone https://github.com/morth-lab/ZYMalign.git
-cd ZYMalign
+git clone https://github.com/morth-lab/EnZight.git
+cd EnZight
 ```
 
 ### 2. Conda environment
 
 ```bash
 conda env create -f environment.yml
-conda activate zymalign_env
+conda activate enzight_env
 ```
 
 
 ## Usage
 
 ```bash
-python scripts/ZYMalign.py --QUERY query.pdb [options]
+python scripts/EnZight.py --QUERY query.pdb [options]
 ```
 
 
@@ -68,9 +68,9 @@ python scripts/ZYMalign.py --QUERY query.pdb [options]
 
 ## Output
 
-ZYMalign produces two complementary outputs: an interactive PyMOL visualization and a ranked table of substitution hotspots.
+EnZight produces two complementary outputs: an interactive PyMOL visualization and a ranked table of substitution hotspots.
 
-<img src="ZYMalign_output_figure.png" alt="Alt Text" height="auto">
+<img src="EnZight_output_figure.png" alt="Alt Text" height="auto">
 
 <h3>Interactive PyMOL visualization</h3>
 
@@ -81,7 +81,7 @@ The PyMOL session file enables interactive inspection of the structural alignmen
 <h3>Substitution hotspot table</h3>
 
 <p>
-The substitution hotspot table lists predicted non-disrupting amino acid substitutions ranked by their ZYMalign score. Substitutions with the lowest ZYMalign scores are shown at the top of the table, corresponding to less conserved positions that may be more likely to tolerate substitution. These top-ranked candidates provide a practical starting point for experimental mutagenesis.
+The substitution hotspot table lists predicted non-disrupting amino acid substitutions ranked by their EnZight score. Substitutions with the lowest EnZight scores are shown at the top of the table, corresponding to less conserved positions that may be more likely to tolerate substitution. These top-ranked candidates provide a practical starting point for experimental mutagenesis.
 </p>
 
 <h3>Full list of all files:</h3>
@@ -89,9 +89,9 @@ The substitution hotspot table lists predicted non-disrupting amino acid substit
 * `alignment.aln` – Structure-based multiple sequence alignment (Clustal format)
 * `hotspots_mode_1.html` – Single substitution hotspot report
 * `hotspots_mode_2.html` – Double substitution hotspot report
-* `scores.json` – Per-residue similarity scores (ZYMalign score)
+* `scores.json` – Per-residue similarity scores (EnZight score)
 * `sequences.fasta` – Query and homolog sequences (fasta format)
-* `ZYMalign_<JOB_KEY>.pse` – PyMOL session file
+* `EnZight_<JOB_KEY>.pse` – PyMOL session file
 * `<JOB_KEY>_log.txt` – Log file
 * Homolog AlphaFold structures if you used `foldseek`
 

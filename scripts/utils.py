@@ -701,12 +701,12 @@ def get_score_by_resi(score_list, resi, atoms):
 import os
 
 def save_hotspot(hotspot_list, output_dir, structures, mode,
-                 favicon_url="https://raw.githubusercontent.com/morth-lab/ZYMalign/main/favicon.ico"):
+                 favicon_url="https://raw.githubusercontent.com/morth-lab/EnZight/main/favicon.ico"):
     doc_name = os.path.join(output_dir, f"hotspots_mode_{mode}.html")
     scores = structures[0].score_list
 
     title = ("Possible single mutations" if mode == 1 else "Possible double mutations") + f" in {structures[0].name}"
-    legend = ("Each row is colored by its ZYMalign score" if mode == 1 else "Each row is colored by its ZYMalign score. The ZYMalign score is averaged for double mutations.")
+    legend = ("Each row is colored by its EnZight score" if mode == 1 else "Each row is colored by its EnZight score. The EnZight score is averaged for double mutations.")
 
     header = f"""<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
 <title>Hotspots Report Mode {mode}</title>
@@ -727,7 +727,7 @@ tr:hover{{background:rgba(255,255,255,.06)}}
 <table><thead><tr>
 <th>#</th>
 <th>Substitution</th>
-<th>ZYMalign Score</th>
+<th>EnZight Score</th>
 <th>Neighbour Residues</th>
 <th>Homolog Structure(s)</th>
 </tr></thead><tbody>
@@ -763,7 +763,7 @@ tr:hover{{background:rgba(255,255,255,.06)}}
                 avg = sum(vals) / len(vals) if vals else 0.0
                 rows.append((avg, wt_txt, key, structs, neigh))
 
-        # Sort by ZYMalign score (lowest first)
+        # Sort by EnZight score (lowest first)
         rows.sort(key=lambda x: x[0])
 
         # Write rows with numbering
@@ -949,7 +949,7 @@ def update_msa(msa_dicts, structures, cmd, threshold=6.0):
     # --- Merge close clusters ---
     deleted_indices = set()
     centers = []  # list of numpy arrays of cluster centroids
-    cluster_score = []  # list of ZYMalign scores for each cluster
+    cluster_score = []  # list of EnZight scores for each cluster
     # index_list = []  # list of indices in refined corresponding to each cluster in splited
     for i, col in enumerate(splited):
         # determine center and score
@@ -972,7 +972,7 @@ def update_msa(msa_dicts, structures, cmd, threshold=6.0):
     sorted_indices = sorted(range(len(cluster_score)), key=lambda i: cluster_score[i], reverse=True)
     struc_len = len(structures)
     # print(splited)
-    # Iderate through clusters in order of ZYMalign score, merging nearest neighbors
+    # Iderate through clusters in order of EnZight score, merging nearest neighbors
     # for i in sorted_indices:
     #     col = splited[i]
     #     if struc_len != len(col):

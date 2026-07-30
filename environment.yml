@@ -1,4 +1,4 @@
-name: zymalign_env
+name: enzight_env
 channels:
   - bioconda
   - conda-forge

@@ -1,4 +1,4 @@
-python ../scripts/ZYMalign.py \
+python ../scripts/EnZight.py \
     --QUERY data/sRO10_AF.cif \
     --HOMOLOGY_SEARCH_METHOD "foldseek" \
     --RESULT_DIR output_foldseek_homologs \
