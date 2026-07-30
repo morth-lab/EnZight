@@ -1,4 +1,7 @@
-<img src="logo.png" alt="Alt Text" width="200">
+<picture>
+  <source srcset="logo-dark.svg" media="(prefers-color-scheme: dark)">
+  <img src="logo.svg" alt="Alt Text" width="200">
+</picture>
 
 [Webserver](https://services.healthtech.dtu.dk/services/SIMAlign-1.0/)
 
