@@ -291,7 +291,7 @@ def main():
 
     document_root = "/var/www/services"
     download_path = zip_file_path.replace(document_root, "")
-    print('<img src="https://raw.githubusercontent.com/morth-lab/EnZight/main/logo.png" width="200">')
+    print('<img src="https://raw.githubusercontent.com/morth-lab/EnZight/main/logo.svg" width="200">')
     print(f'<a href="{download_path}.zip" download>Download here</a>')
 
 
