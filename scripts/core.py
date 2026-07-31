@@ -99,6 +99,6 @@ def EnZight(query, job_key, result_dir, tmp_dir="tmp", homologs=None, homology_s
         select_hotspots_in_pymol(single_hotspots, structures, align, cmd, mode=1)
         select_hotspots_in_pymol(double_hotspots, structures, align, cmd, mode=2)
 
-        cmd.util.cnc()
+        cmd.util.cnc(_self=cmd)
         cmd.save(os.path.join(result_dir,"EnZight_"+job_key+".pse"))
  
