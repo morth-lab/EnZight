@@ -100,7 +100,7 @@ class Structure:
         self.cmd.iterate(self.name, "stored.residues.append(resi)")
         if [resi for resi in self.stored.residues if not resi.isdigit()]:
             error_msg = f"{self.name} was removed due to invalid residues."
-            print(f'<p style="color:red;"><b>ERROR:</b> {error_msg}</p>')
+            print(f'<p style="color:orange;"><b>WARNING:</b> {error_msg}</p>')
             self.cmd.delete(self.name)
             return error_msg
         
@@ -108,16 +108,15 @@ class Structure:
 
         if len(self.pymol_build_in_get_fasta()) != len(self.cmd.get_model(self.CA).atom):
             error_msg = f"{self.name} was removed because the FASTA and CA atom counts do not match."
-            print(f'<p style="color:red;"><b>ERROR:</b> {error_msg}</p>')
+            print(f'<p style="color:orange;"><b>WARNING:</b> {error_msg}</p>')
             fasta_length = len(self.pymol_build_in_get_fasta())
             ca_length = len(self.cmd.get_model(self.CA).atom)
-            print(f'<p style="color:red;"><b>DETAILS:</b> Fasta length: {fasta_length}, CA atom length: {ca_length}</p>')
+            print(f'<p style="color:orange;"><b>DETAILS:</b> Fasta length: {fasta_length}, CA atom length: {ca_length}</p>')
             print(self.cmd.get_model(self.not_HETATM).atom[0].chain)
             print("build in FASTA:")
             print(self.pymol_build_in_get_fasta())
             print("custom FASTA:")
             print(self.get_fasta())
-            print("ZZZ")
             self.cmd.delete(self.name)
             return error_msg
 

@@ -26,9 +26,9 @@ def detect_structure_format(path):
             line = line.strip()
 
             if line.startswith("data_") or "_atom_site." in line:
-                return path[:-1]+"cif"
+                return path[:-6]+"query.cif"
             if line.startswith(("ATOM", "HETATM", "HEADER", "REMARK", "MODEL")):
-                return path[:-1]+"pdb"
+                return path[:-6]+"query.pdb"
 
     return path
 
@@ -156,7 +156,7 @@ def extract_highest_results(tresshold, number_of_templates, tmp_dir, result_dir,
                     type = "PDB"
                 template_files.append(StructureFile(name, file_location, type))
             elif len(template_files) < 2:
-                print(f'<p style="color:red;"><b>ERROR:</b> Not enough template structure files were downloaded!</p>')
+                print(f'<p style="color:red;"><b>ERROR:</b> Not enough foldseek homologous structure files were downloaded!</p>')
                 break
     return template_files
 
@@ -254,7 +254,11 @@ def loading_structures_to_pymol(structure_files,query,cmd,stored,log_file_path):
                 log_message(log_file_path, f"\tFetched: {name}")
                 Structure(name,cmd,stored).validate_structure_format()
             except Exception as e:
-                print(f'<p style="color:orange;"><b>WARNING:</b> {name} could not be fetched to PyMOL</p>')
+                if file == query:
+                    print(f'<p style="color:red;"><b>ERROR:</b> Query structure {name} could not be fetched to PyMOL</p>')
+                    sys.exit(1)
+                else:
+                    print(f'<p style="color:orange;"><b>WARNING:</b> {name} could not be fetched to PyMOL</p>')
 
         # Loading structures from paths
         else:
@@ -266,7 +270,11 @@ def loading_structures_to_pymol(structure_files,query,cmd,stored,log_file_path):
             
             # Check if the file exists at the specified path
             if not os.path.isfile(normalized_path):
-                print(f'<p style="color:red;"><b>ERROR:</b> File not found at {normalized_path})</p>')
+                if file == query:
+                    print(f'<p style="color:red;"><b>ERROR:</b> Query structure file not found at {normalized_path}</p>')
+                    sys.exit(1)
+                else:
+                    print(f'<p style="color:orange;"><b>WARNING:</b> Structure file {name} not found at {normalized_path}</p>')
                 continue
             
             try:
@@ -276,7 +284,12 @@ def loading_structures_to_pymol(structure_files,query,cmd,stored,log_file_path):
                 log_message(log_file_path, f"\tLoaded: {name} from {normalized_path}")
                 Structure(name,cmd,stored).validate_structure_format()
             except Exception as e:
-                print(f'<p style="color:red;"><b>ERROR:</b> {normalized_path} could not be loaded in PyMOL.</p>')
+                if file == query:
+                    print(f'<p style="color:red;"><b>ERROR:</b> Query structure {name} could not be loaded in PyMOL</p>')
+                    sys.exit(1)
+                else:
+                    print(f'<p style="color:orange;"><b>WARNING:</b> {name} could not be loaded in PyMOL</p>')
+                    log_message(log_file_path, f"\tFailed to load: {name} from {normalized_path}. Error: {e}")
 
     canonicalize_resn(cmd)
     structures = []

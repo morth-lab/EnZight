@@ -4,6 +4,7 @@ from core import EnZight
 import sys
 from utils import validate_structure_file, encrypt_key, create_output_dirs, log_message, detect_structure_format
 import shutil
+import zipfile
 
 def main():
 
@@ -145,7 +146,9 @@ def main():
 
     args = parser.parse_args()
 
-    # Change "0" extension to ".pdb" for web server
+    tmp_dir, result_dir = create_output_dirs(args.RESULT_DIR, args.TMP_DIR)
+
+    # Change "0" extension to ".pdb"/".cif" for web server
     if args.QUERY.endswith(".0"):
         old_query_path = args.QUERY
         args.QUERY = detect_structure_format(old_query_path)
@@ -184,32 +187,76 @@ def main():
             
         else:
             homologs = [os.path.join(args.HOMOLOGS_DIR, hom_file) for hom_file in os.listdir(args.HOMOLOGS_DIR)]
-        if len(homologs) < 2:
-            print(homologs)
-            print(f'<p style="color:red;"><b>ERROR:</b> Please provide 2 or more homolog files when using user-specified homology search method.</p>')
+
+        if len(homologs) == 0:
+            print(
+                '<p style="color:red;"><b>ERROR:</b> '
+                'No valid homolog files provided. Please provide 2 or more homolog files '
+                'when using user-specified homology search method.</p>'
+            )
             sys.exit(1)
 
-        # Change "0" extension to ".pdb" for web server
-        for i, temp_file in enumerate(homologs):
-            print(temp_file)
-            if temp_file.endswith(".0"):
-                old_temp_file_path = temp_file
-                new_temp_file_path = detect_structure_format(old_temp_file_path)
-                temp_file = new_temp_file_path
-                print(f"Detected homolog file format for {old_temp_file_path}: {new_temp_file_path}")
-                if new_temp_file_path.endswith("0"):
-                    homologs.pop(i)
-                    print(f'<p style="color:orange;"><b>WARNING:</b> Could not detect structure format for {old_temp_file_path}. This file will be skipped.</p>')
-                    continue
-                # new_temp_file_path = temp_file
-                os.rename(old_temp_file_path, new_temp_file_path)
-                homologs[i] = new_temp_file_path
-            if not validate_structure_file(temp_file):
-                print(f'<p style="color:orange;"><b>WARNING:</b> Could not open or read {temp_file}</p>')
-                homologs.remove(temp_file)
-        if len(homologs) < 2:
-            print(f'<p style="color:red;"><b>ERROR:</b> After validating the homolog files, less than 2 valid homolog files remain. Please provide at least 2 valid homolog files.</p>')
-            sys.exit(1)
+        # Zip file handling for web server
+        elif len(homologs) == 1:
+            zip_file_path = homologs[0]
+
+            if zipfile.is_zipfile(zip_file_path):
+                extract_dir = os.path.join(tmp_dir, f"{args.JOB_KEY}_homologs")
+                os.makedirs(extract_dir, exist_ok=True)
+
+                with zipfile.ZipFile(zip_file_path, "r") as zip_ref:
+                    zip_ref.extractall(extract_dir)
+
+                homologs = [
+                    os.path.join(extract_dir, hom_file)
+                    for hom_file in os.listdir(extract_dir)
+                    if hom_file.lower().endswith((".pdb", ".cif"))
+                ]
+
+                if len(homologs) < 2:
+                    print(
+                        '<p style="color:red;"><b>ERROR:</b> '
+                        'The zip file must contain at least 2 .pdb or .cif files.</p>'
+                    )
+                    sys.exit(1)
+
+            elif zip_file_path.lower().endswith((".pdb", ".cif")):
+                print(
+                    '<p style="color:red;"><b>ERROR:</b> '
+                    'Please provide 2 or more homolog files when using '
+                    'user-specified homology search method.</p>'
+                )
+                sys.exit(1)
+
+            else:
+                print(
+                    '<p style="color:red;"><b>ERROR:</b> '
+                    'The provided homolog file is not a valid zip file.</p>'
+                )
+                sys.exit(1)
+
+
+        # # Change "0" extension to ".pdb" for web server
+        # for i, temp_file in enumerate(homologs):
+        #     print(temp_file)
+        #     if temp_file.endswith(".0"):
+        #         old_temp_file_path = temp_file
+        #         new_temp_file_path = detect_structure_format(old_temp_file_path)
+        #         temp_file = new_temp_file_path
+        #         print(f"Detected homolog file format for {old_temp_file_path}: {new_temp_file_path}")
+        #         if new_temp_file_path.endswith("0"):
+        #             homologs.pop(i)
+        #             print(f'<p style="color:orange;"><b>WARNING:</b> Could not detect structure format for {old_temp_file_path}. This file will be skipped.</p>')
+        #             continue
+        #         # new_temp_file_path = temp_file
+        #         os.rename(old_temp_file_path, new_temp_file_path)
+        #         homologs[i] = new_temp_file_path
+        #     if not validate_structure_file(temp_file):
+        #         print(f'<p style="color:orange;"><b>WARNING:</b> Could not open or read {temp_file}</p>')
+        #         homologs.remove(temp_file)
+        # if len(homologs) < 2:
+        #     print(f'<p style="color:red;"><b>ERROR:</b> After validating the homolog files, less than 2 valid homolog files remain. Please provide at least 2 valid homolog files.</p>')
+        #     sys.exit(1)
     else:
         homologs = None
 
@@ -237,7 +284,7 @@ def main():
         print(f'<p style="color:red;"><b>ERROR:</b> MUSCLE binary not found on PATH</p>')
         sys.exit(1)
 
-    tmp_dir, result_dir = create_output_dirs(args.RESULT_DIR, args.TMP_DIR)
+    
     zip_file_path = os.path.join(result_dir, f"{job_key}_EnZight")
     os.makedirs(zip_file_path, exist_ok=True)
     log_file_path = os.path.join(zip_file_path, f"{args.JOB_KEY}_log.txt")
