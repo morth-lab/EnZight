@@ -50,8 +50,8 @@ python scripts/EnZight.py --QUERY query.pdb [options]
 | Option (`-short`)               | Description                                                        | Default       |
 | ------------------------------- | ------------------------------------------------------------------ | ------------- |
 | `--QUERY` `-q`                  | Path to input structure file (`.pdb` or `.cif`). **Required**      | —             |
-| `--HOMOLOGS` `-hom`              | Two or more homolog files (for `user_specified`).                 | `None`        |
-| `--HOMOLOGS_DIR` `-hom-dir`      | Directory of homolog files (for `user_specified`).                | `None`        |
+| `--HOMOLOGS` `-hom`              | Two or more `.pdb` or `.cif` homolog files (for `user_specified`). It also accepts a ZIP file with `.pdb` or `.cif` homolog files.                 | `None`        |
+| `--HOMOLOGS_DIR` `-hom-dir`      | Directory of `.pdb` or `.cif` homolog files (for `user_specified`).                | `None`        |
 | `--HOMOLOGY_SEARCH_METHOD` `-H` | `foldseek` or `user_specified`.                                    | `foldseek`    |
 | `--MAX_DISTANCE` `-d`           | Distance threshold for gap detection (Å).                          | `5`           |
 | `--MAX_RMSD` `-r`               | Maximum RMSD for homolog filtering (Å).                           | `5`           |
