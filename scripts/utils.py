@@ -530,16 +530,16 @@ def get_neighborAA(structures, align, cmd, only_core):
     core_index = [resi_to_index(residue, align[0], structures[0].model.atom) for residue in core]
 
     neighborAA_list = []
-    for j, struc in enumerate(structures[1:]):
+    for j, struc in enumerate(structures):
         if only_core == "1":
-            resi_list = [index_to_resi(index, align[j+1], struc.model.atom) for index in core_index]
+            resi_list = [index_to_resi(index, align[j], struc.model.atom) for index in core_index]
         else:
-            resi_list = [index_to_resi(index, align[j+1], struc.model.atom) for index in range(len(align[j+1].seq)) if align[j+1].seq[index] != "-"]
+            resi_list = [index_to_resi(index, align[j], struc.model.atom) for index in range(len(align[j].seq)) if align[j].seq[index] != "-"]
         resi_set = set(resi_list)
 
         neighborAA_list.append([])
         atoms = cmd.get_model(struc.side_chains).atom
-        kd = cKDTree([atom.coord for atom in atoms])
+        #kd = cKDTree([atom.coord for atom in atoms])
 
         residue = 0
         tmp_close_AAs = set()
@@ -549,7 +549,7 @@ def get_neighborAA(structures, align, cmd, only_core):
 
             if residue != int(a.resi):
                 if residue in resi_set:
-                    neighborAA_list, count = update_neighborAA_list(neighborAA_list, tmp_close_AAs, count, residue, resi_list, j, align[0], structures[0].model.atom, align[j+1], struc.model.atom)
+                    neighborAA_list, count = update_neighborAA_list(neighborAA_list, tmp_close_AAs, count, residue, resi_list, j, align[0], structures[0].model.atom, align[j], struc.model.atom)
                     tmp_close_AAs = set()
                 residue = int(a.resi)
             if residue in resi_set:
@@ -558,15 +558,58 @@ def get_neighborAA(structures, align, cmd, only_core):
                 tmp_close_AAs.update(tmp_set)
 
         if residue in resi_set:
-            neighborAA_list, count = update_neighborAA_list(neighborAA_list, tmp_close_AAs, count, residue, resi_list, j, align[0], structures[0].model.atom, align[j+1], struc.model.atom)
+            neighborAA_list, count = update_neighborAA_list(neighborAA_list, tmp_close_AAs, count, residue, resi_list, j, align[0], structures[0].model.atom, align[j], struc.model.atom)
 
         # Add empty set if sequence ends with glycine
         while len(resi_list) > count:
             neighborAA_list[j].append(set())
             count += 1
-    return neighborAA_list, core, core_index
+    combined_neighborAA_list = []
+    query_neighborAA_list = neighborAA_list[0]
+    for k, ele in enumerate(neighborAA_list[1:]):
+        combined_neighborAA_list.append(query_neighborAA_list.copy())
+        for l, resi_set in enumerate(ele):
+            combined_neighborAA_list[k][l].update(resi_set)
+    print(f"Neighbor AA list: {combined_neighborAA_list}")
+    print(len(combined_neighborAA_list))
+    for i, ele in enumerate(combined_neighborAA_list):
+        print(f"Structure {i} has {len(ele)} residues with neighbor AAs.")
+    # sys.exit(1)
+    return combined_neighborAA_list, core, core_index
 
+def filter_compatible_positions(resi_list, non_compatible_resi):
+    if len(resi_list) != len(non_compatible_resi):
+        raise ValueError("The two lists must have the same length.")
 
+    for i, (resi_entry, non_compatible) in enumerate(
+        zip(resi_list, non_compatible_resi)
+    ):
+        has_tuple = (
+            isinstance(resi_entry, list)
+            and any(isinstance(item, tuple) for item in resi_entry)
+        )
+
+        has_numbers = (
+            isinstance(non_compatible, set)
+            and any(isinstance(item, (int, float)) for item in non_compatible)
+        )
+
+        if not (has_tuple and has_numbers):
+            non_compatible_resi[i] = set()
+
+            # Keep existing string markers such as ["f"] or ["g"].
+            has_string = (
+                isinstance(resi_entry, str)
+                or (
+                    isinstance(resi_entry, list)
+                    and any(isinstance(item, str) for item in resi_entry)
+                )
+            )
+
+            if not has_string:
+                resi_list[i] = ["h"]
+
+    return resi_list, non_compatible_resi
 
 def finding_hotspots(neighborAA_list, align, structures, core, core_index, only_core, mode=1):
     """
@@ -694,7 +737,9 @@ def finding_hotspots(neighborAA_list, align, structures, core, core_index, only_
                     resi_list.append(["f"])
                 non_compatible_resi.append(non_compatible_tmpset)
                 # Add hotspot to hotspot list
+            # print(f"Length of neighbors {len(non_compatible_resi)} and {non_compatible_resi} and {len(residue_to_mutate)} and {mode}")
             if len(residue_to_mutate) == mode:
+                resi_list, non_compatible_resi = filter_compatible_positions(resi_list, non_compatible_resi)
                 hotspot_list.append([
                     residue_to_mutate,
                     resi_list,
@@ -772,8 +817,13 @@ tr:hover{{background:rgba(255,255,255,.06)}}
                 uniq[key][1].update(neigh_lists[i])
 
             for key, (structs, neigh) in uniq.items():
-                vals = [get_score_by_resi(scores, resi, structures[0].model.atom) for resi in wt_pos]
-                avg = sum(vals) / len(vals) if vals else 0.0
+                mutated_score = [get_score_by_resi(scores, resi, structures[0].model.atom) for resi in wt_pos]
+                neigh_scores = [get_score_by_resi(scores, resi, structures[0].model.atom) for resi in neigh]
+                # print(structs, neigh, vals)
+                # print(wt_pos)
+                avg_mut = sum(mutated_score) / len(mutated_score) if mutated_score else 0.0
+                avg_neigh = sum(neigh_scores) / len(neigh_scores) if neigh_scores else 0.0
+                avg = ((1-avg_mut) + avg_neigh) / 2
                 rows.append((avg, wt_txt, key, structs, neigh))
 
         # Sort by EnZight score (lowest first)
@@ -855,6 +905,7 @@ def select_hotspots_in_pymol(printed_hotspots, structures, align, cmd, mode=1):
             selection_string += ")))"
 
         cmd.select(f"{mode_str}_sub_{str(idx)}", selection_string)
+    
 
 
 # def resi_to_index(residue,align_seq,atomsCA):
