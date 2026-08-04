@@ -238,7 +238,7 @@ def canonicalize_resn(cmd):
 
 
 
-def loading_structures_to_pymol(structure_files,query,cmd,stored,log_file_path):
+def loading_structures_to_pymol(structure_files,query,cmd,stored,log_file_path, query_file):
             
     cmd.reinitialize()
     for file in structure_files:
@@ -254,7 +254,7 @@ def loading_structures_to_pymol(structure_files,query,cmd,stored,log_file_path):
                 log_message(log_file_path, f"\tFetched: {name}")
                 Structure(name,cmd,stored).validate_structure_format()
             except Exception as e:
-                if file == query:
+                if file == query_file:
                     print(f'<p style="color:red;"><b>ERROR:</b> Query structure {name} could not be fetched to PyMOL</p>')
                     sys.exit(1)
                 else:
@@ -270,7 +270,7 @@ def loading_structures_to_pymol(structure_files,query,cmd,stored,log_file_path):
             
             # Check if the file exists at the specified path
             if not os.path.isfile(normalized_path):
-                if file == query:
+                if file == query_file:
                     print(f'<p style="color:red;"><b>ERROR:</b> Query structure file not found at {normalized_path}</p>')
                     sys.exit(1)
                 else:

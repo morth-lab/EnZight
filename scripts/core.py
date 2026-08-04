@@ -35,7 +35,7 @@ def EnZight(query, job_key, result_dir, tmp_dir="tmp", homologs=None, homology_s
         cmd = pymol.cmd
         stored = pymol.stored
         log_message(log_file_path, "Loading structures into PyMOL...")
-        structures = loading_structures_to_pymol(structure_files, query, cmd, stored, log_file_path)
+        structures = loading_structures_to_pymol(structure_files, query, cmd, stored, log_file_path, query_file)
 
         log_message(log_file_path, "Superimposing structures...")
         structures = super_impose_structures(structures, max_rmsd, cmd, stored, log_file_path)
