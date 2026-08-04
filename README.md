@@ -3,7 +3,7 @@
   <img src="logo.svg" alt="Alt Text" width="200">
 </picture>
 
-[Webserver](https://services.healthtech.dtu.dk/services/SIMAlign-1.0/)
+[Webserver](https://services.healthtech.dtu.dk/services/EnZight-1.0/)
 
 EnZight is a structural alignment tool for identifying non-disrupting amino acid substitutions, referred to as substitution hotspots, from homologous protein structures. The program uses either Foldseek-detected homologs or user-specified homologs to generate structural alignments and residue-level similarity scores. In parallel, EnZight generates a multiple sequence alignment that is refined using structural information to produce a structure-based multiple sequence alignment (SB-MSA), which is used to identify substitution hotspots.
 
