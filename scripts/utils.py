@@ -367,7 +367,7 @@ def calculate_similarity_score(structures, max_dist, cmd, BLOSUM_string):
                     if closest_pair[0] == ref_struc.cKDTree.query(atom.coord)[0] and closest_pair[0] <= max_dist:
                         score += ((aa_to_blosum_score(ref_resn,atom.resn,BLOSUM) - np.min(BLOSUM))/(n_templates*max_score))
                         tmp_coordinates.append(atom.coord)
-            ref_struc.score_list.append(score)
+            ref_struc.score_list.append(score*100) 
 
             # Updating alignment based on structural infomation 
             tmp_center = average_coordinate(tmp_coordinates)
@@ -436,14 +436,14 @@ def bigger_AA(ref_AA,target_AA,if_refAA_and_targetAA_are_the_same=False):
     else:
         return False
 
-def median_40_percent(data):
-    """
-    Getting 40 percent median of the data
-    """
-    n = len(data)
-    remove_count = int(0.2 * n)
-    # Directly pass the sliced list to statistics.median()
-    return median(sorted(data)[:n-remove_count])
+# def median_40_percent(data):
+#     """
+#     Getting 40 percent median of the data
+#     """
+#     n = len(data)
+#     remove_count = int(0.2 * n)
+#     # Directly pass the sliced list to statistics.median()
+#     return median(sorted(data,reverse=True)[:n-remove_count])
 
 
 
@@ -458,7 +458,8 @@ def get_core(structures, cmd):
     """
     score_list = structures[0].score_list
     # print("Score list:", score_list)
-    med = median_40_percent(score_list)
+    # med = median_40_percent(score_list)
+    med = median(score_list)
     # print("40 percent median score:", med)
     atoms = structures[0].model.atom
     # print("Number of atoms in query structure:", len(atoms))
@@ -567,13 +568,15 @@ def get_neighborAA(structures, align, cmd, only_core):
     combined_neighborAA_list = []
     query_neighborAA_list = neighborAA_list[0]
     for k, ele in enumerate(neighborAA_list[1:]):
-        combined_neighborAA_list.append(query_neighborAA_list.copy())
+        # combined_neighborAA_list.append([])
+        combined_neighborAA_list.append(query_neighborAA_list.copy()) #<-------------------- Change this
         for l, resi_set in enumerate(ele):
-            combined_neighborAA_list[k][l].update(resi_set)
-    print(f"Neighbor AA list: {combined_neighborAA_list}")
-    print(len(combined_neighborAA_list))
-    for i, ele in enumerate(combined_neighborAA_list):
-        print(f"Structure {i} has {len(ele)} residues with neighbor AAs.")
+            combined_neighborAA_list[k][l].update(resi_set) #<-------------------- Change this
+            # combined_neighborAA_list[k].append(resi_set)
+    # print(f"Neighbor AA list: {combined_neighborAA_list}")
+    # print(len(combined_neighborAA_list))
+    # for i, ele in enumerate(combined_neighborAA_list):
+    #     print(f"Structure {i} has {len(ele)} residues with neighbor AAs.")
     # sys.exit(1)
     return combined_neighborAA_list, core, core_index
 
@@ -739,7 +742,7 @@ def finding_hotspots(neighborAA_list, align, structures, core, core_index, only_
                 # Add hotspot to hotspot list
             # print(f"Length of neighbors {len(non_compatible_resi)} and {non_compatible_resi} and {len(residue_to_mutate)} and {mode}")
             if len(residue_to_mutate) == mode:
-                resi_list, non_compatible_resi = filter_compatible_positions(resi_list, non_compatible_resi)
+                resi_list, non_compatible_resi = filter_compatible_positions(resi_list, non_compatible_resi) #<-------------------- Change this
                 hotspot_list.append([
                     residue_to_mutate,
                     resi_list,
@@ -821,17 +824,18 @@ tr:hover{{background:rgba(255,255,255,.06)}}
                 neigh_scores = [get_score_by_resi(scores, resi, structures[0].model.atom) for resi in neigh]
                 # print(structs, neigh, vals)
                 # print(wt_pos)
-                avg_mut = sum(mutated_score) / len(mutated_score) if mutated_score else 0.0
+                avg_mut = sum(mutated_score) / len(mutated_score) if mutated_score else 0.0 
                 avg_neigh = sum(neigh_scores) / len(neigh_scores) if neigh_scores else 0.0
-                avg = ((1-avg_mut) + avg_neigh) / 2
+                # avg = ((1-avg_mut) + avg_neigh) / 2
+                avg = (100-avg_mut)+(100-avg_neigh)  # Use only neighbor score for coloring
                 rows.append((avg, wt_txt, key, structs, neigh))
 
-        # Sort by EnZight score (lowest first)
-        rows.sort(key=lambda x: x[0])
+        # Sort by EnZight score (highest first)
+        rows.sort(key=lambda x: x[0], reverse=True)
 
         # Write rows with numbering
         for idx, (avg, wt_txt, key, structs, neigh) in enumerate(rows, start=1):
-            r, g, b = (int(c * 255) for c in color_by_number(avg))
+            r, g, b = (int(c * 255) for c in color_hotspot(avg))
             doc.write(
                 f"<tr style='color:rgb({r},{g},{b})'>"
                 f"<td class='numcol'>{idx}</td>"
@@ -844,16 +848,33 @@ tr:hover{{background:rgba(255,255,255,.06)}}
         doc.write(footer)
     return rows
 
+def color_hotspot(number):
+    """
+    Gradient from white to purple.
 
+    number <= 0:   white
+    number >= 100: purple (81, 24, 106)
+    """
+    # Limit the value to the range 0–100 and normalize it to 0–1
+    fraction = max(0, min(number, 100)) / 100
+
+    purple = [81 / 255, 24 / 255, 106 / 255]
+    white = [1.0, 1.0, 1.0]
+
+    return [
+        white_value + fraction * (purple_value - white_value)
+        for white_value, purple_value in zip(white, purple)
+    ]
 
 # pymol formatting functions
 
-def color_by_number(number):
+def color_conservation(number):
     """
     Gradient from red to white
+    number 100: white
     number 0: red
-    number 1: white
     """
+    number = number / 100
     if number >= 1:
         return [1,1,1]
     return [0.8+(number/5),number,number]
@@ -863,13 +884,13 @@ def color_structure(structure, cmd):
     Coloring by similarity in pymol
     """
     score = structure.score_list
-    cmd.set_color("unconserved", color_by_number(0))
+    cmd.set_color("unconserved", color_conservation(0))
     for s, atom in zip(score, structure.model.atom):
         if s == 0:
             cmd.color("unconserved", f"resi {atom.resi} and {structure.first_chain}")
         else:
             color_name = str(round(s,2))
-            cmd.set_color(color_name, color_by_number(s))
+            cmd.set_color(color_name, color_conservation(s))
             cmd.color(color_name, f"resi {atom.resi} and {structure.first_chain}")
 
 
@@ -936,7 +957,7 @@ def save_scores_as_json(structures, output_dir, filename="scores.json"):
         {
           "name": <structure.name>,
           "residues": [<int>, <int>, ...],
-          "scores": [<float>, <float>, ...]
+          "conservation_scores": [<float>, <float>, ...]
         },
         ...
       ]
@@ -952,7 +973,7 @@ def save_scores_as_json(structures, output_dir, filename="scores.json"):
         structs.append({
             "name":     struct.name,
             "residues": residues,
-            "scores":   scores
+            "conservation_scores":   scores
         })
 
     # wrap it and write out
