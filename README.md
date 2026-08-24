@@ -13,9 +13,9 @@ EnZight is a structural alignment tool for identifying non-disrupting amino acid
 ## Features
 
 * Automatic homology search with **Foldseek** or user-specified templates
-* Supports `.pdb` and `.cif` file formats
+* Supports `.pdb` and `.cif` file formats and pdb and uniprot IDs
 * Gap recognition and RMSD filtering for precise alignment
-* Similarity scoring using **BLOSUM** matrices
+* Conservation scoring using **BLOSUM** matrices
 * Hotspot prediction for single and double substitutions
 * PyMOL session generation (`.pse`) for interactive visualization
 * Outputs: JSON scores, HTML hotspot reports, Clustal alignments
@@ -49,8 +49,10 @@ python scripts/EnZight.py --QUERY query.pdb [options]
 
 | Option (`-short`)               | Description                                                        | Default       |
 | ------------------------------- | ------------------------------------------------------------------ | ------------- |
-| `--QUERY` `-q`                  | Path to input structure file (`.pdb` or `.cif`). **Required**      | —             |
-| `--HOMOLOGS` `-hom`              | Two or more `.pdb` or `.cif` homolog files (for `user_specified`). It also accepts a ZIP file with `.pdb` or `.cif` homolog files.                 | `None`        |
+| `--QUERY` `-q`                  | Path to input structure file (`.pdb` or `.cif`). Alternatively, use `--QUERY_ID` with a PDB or UniProt ID. | `None` |
+| `--QUERY_ID` `-q-id`                    | PDB or UniProt ID for the query structure. Alternatively, use `--QUERY` with a local `.pdb` or `.cif` file. | `None` |
+| `--HOMOLOGS` `-hom`            | Two or more homolog structure files (`.pdb` or `.cif`) for `user_specified`. Multiple files should be provided as a space-separated list. A ZIP file containing `.pdb` or `.cif` homolog structures is also accepted. | `None` |
+| `--HOMOLOGS_ID` `-hom-id`                | Two or more PDB or UniProt IDs for homologs when using `user_specified`. Multiple IDs should be provided as a space-separated list. | `None` |
 | `--HOMOLOGS_DIR` `-hom-dir`      | Directory of `.pdb` or `.cif` homolog files (for `user_specified`).                | `None`        |
 | `--HOMOLOGY_SEARCH_METHOD` `-H` | `foldseek` or `user_specified`.                                    | `foldseek`    |
 | `--MAX_DISTANCE` `-d`           | Distance threshold for gap detection (Å).                          | `5`           |
