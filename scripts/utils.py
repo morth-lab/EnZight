@@ -14,6 +14,7 @@ from Bio.Align import substitution_matrices
 import numpy as np
 from statistics import median
 from Bio import AlignIO
+import re
 
 ## Main functions
 
@@ -77,6 +78,45 @@ def create_output_dirs(result_dir, tmp_dir):
 
 ## Core functions
 
+def detect_format(string):
+
+    if "." not in string and "/" not in string:
+
+        # PDB ID
+        if re.fullmatch(r"[0-9][A-Za-z0-9]{3}", string):
+            return string, "PDBID"
+
+        elif re.fullmatch(
+            r"AF-[A-Z0-9]+(?:-\d+)?-F\d+(?:-model(?:_v\d+)?)?",
+            string.upper()
+        ):
+            string = string.upper()
+
+            # Remove existing model/version suffix
+            string = re.sub(r"-model(?:_v\d+)?$", "", string)
+
+            # Add desired version
+            string = f"{string}-model_v6"
+
+            return string, "AF"
+
+        # UniProt ID
+        elif re.fullmatch(
+            r"(?:[OPQ][0-9][A-Z0-9]{3}[0-9]|"
+            r"[A-NR-Z][0-9][A-Z][A-Z0-9]{2}[0-9]|"
+            r"[A-Z0-9]{10})(?:-\d+)?",
+            string.upper()
+        ):
+            string = f"AF-{string.upper()}-F1-model_v6"
+
+
+            return string, "AF"
+
+        else:
+            return string, "unknown"
+
+    else:
+        return None
 
 def download_AF_structure(name,outfolder,log_file_path):
     name = name.split(" ")[0].split(".")[0]
@@ -153,7 +193,7 @@ def extract_highest_results(tresshold, number_of_templates, tmp_dir, result_dir,
                     type = os.path.basename(file_location).split(".")[-1]
                 else:
                     name = name.split("-")[0]
-                    type = "PDB"
+                    type = "PDBID"
                 template_files.append(StructureFile(name, file_location, type))
             elif len(template_files) < 2:
                 print(f'<p style="color:red;"><b>ERROR:</b> Not enough foldseek homologous structure files were downloaded!</p>')
@@ -236,6 +276,19 @@ def canonicalize_resn(cmd):
         cmd.alter(f"resn {k}", f"resn='{v}'")
     cmd.sort()
 
+def download_query_pdb(string,tmp_dir):
+    url = f"https://files.rcsb.org/download/{string}.pdb"
+    output_path = os.path.join(tmp_dir, f"{string}.pdb")
+    # print(url,output_path)
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Raise an error for bad responses
+        with open(output_path, 'wb') as f:
+            f.write(response.content)
+        return output_path
+    except requests.exceptions.RequestException as e:
+        print(f'<p style="color:red;"><b>ERROR:</b> Could not download PDB structure for Query {string}. Please make sure the PDB ID is valid. Error: {e}</p>')
+        sys.exit(1)
 
 
 def loading_structures_to_pymol(structure_files,query,cmd,stored,log_file_path, query_file):
@@ -245,23 +298,35 @@ def loading_structures_to_pymol(structure_files,query,cmd,stored,log_file_path, 
         # Extract attributes from the StructureFile object
         name = file.name
         file_location = file.file_location
+        type = file.type
         
         # Fetching PDB files
-        if name == "PDB":
+        if type == "PDBID":
             try:
                 cmd.fetch(name)
                 remove_alt_conformations(cmd, name, keep_alts=("", "A"))
                 log_message(log_file_path, f"\tFetched: {name}")
                 Structure(name,cmd,stored).validate_structure_format()
             except Exception as e:
-                if file == query_file:
-                    print(f'<p style="color:red;"><b>ERROR:</b> Query structure {name} could not be fetched to PyMOL</p>')
-                    sys.exit(1)
-                else:
-                    print(f'<p style="color:orange;"><b>WARNING:</b> {name} could not be fetched to PyMOL</p>')
+                # if file == query_file:
+                #     print(f'<p style="color:red;"><b>ERROR:</b> Query structure {name} could not be fetched to PyMOL</p>')
+                #     sys.exit(1)
+                # else:
+                print(f'<p style="color:orange;"><b>WARNING:</b> {name} could not be fetched to PyMOL</p>')
+
+
+
 
         # Loading structures from paths
         else:
+            # if type == "AF":
+            #     file_location = download_AF_structure(name,"",log_file_path)
+
+
+
+
+
+                
             # Normalize the file path
             if file_location not in query:
                 normalized_path = os.path.normpath(file_location)
@@ -284,7 +349,7 @@ def loading_structures_to_pymol(structure_files,query,cmd,stored,log_file_path, 
                 log_message(log_file_path, f"\tLoaded: {name} from {normalized_path}")
                 Structure(name,cmd,stored).validate_structure_format()
             except Exception as e:
-                if file == query:
+                if file == query_file:
                     print(f'<p style="color:red;"><b>ERROR:</b> Query structure {name} could not be loaded in PyMOL</p>')
                     sys.exit(1)
                 else:

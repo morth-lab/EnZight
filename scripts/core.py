@@ -17,6 +17,7 @@ def EnZight(query, job_key, result_dir, tmp_dir="tmp", homologs=None, homology_s
 
 
     basename = os.path.basename(query).split(".")
+    print(query, basename)
     query_file = StructureFile(basename[0], query, basename[1])
     structure_files = [query_file]
 

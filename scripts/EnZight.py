@@ -2,9 +2,10 @@ import argparse
 import os
 from core import EnZight
 import sys
-from utils import validate_structure_file, encrypt_key, create_output_dirs, log_message, detect_structure_format
+from utils import detect_format, download_AF_structure, validate_structure_file, encrypt_key, create_output_dirs, log_message, detect_structure_format, download_query_pdb
 import shutil
 import zipfile
+import re
 
 def main():
 
@@ -17,8 +18,14 @@ def main():
         "-q",
         "--QUERY",
         type=str,
-        required=True,
-        help="Required argument! Path to the query protein structure file (.pdb or .cif)."
+        default=None,
+        help="Path to the query protein structure file (.pdb or .cif)."
+    )
+    parser.add_argument(
+        "--QUERY_ID",
+        type=str,
+        default=None,
+        help="PDB or UniProt ID of the query protein."
     )
     parser.add_argument(
         "-hom",
@@ -27,6 +34,13 @@ def main():
         default=None,
         help="List of paths to files used as homologs for the query file (only required for user-specified homology search method)."
     )  
+    parser.add_argument(
+        "-hom-id",
+        "--HOMOLOGS_ID",
+        type=str,
+        default=None,
+        help="PDB or UniProt IDs used as homologs, separated by spaces or commas."
+    )
     parser.add_argument(
         "-hom-dir",
         "--HOMOLOGS_DIR",
@@ -146,19 +160,60 @@ def main():
 
     args = parser.parse_args()
 
+    # Query can either be an uploaded structure or a PDB/UniProt ID
+    if args.QUERY:
+        query_file = args.QUERY
+    elif args.QUERY_ID:
+        query_file = args.QUERY_ID.strip()
+    else:
+        parser.error("A query structure file or PDB/UniProt ID must be provided.")
+        sys.exit(1)
+
     tmp_dir, result_dir = create_output_dirs(args.RESULT_DIR, args.TMP_DIR)
 
+
+
+    if detect_format(query_file):
+        string, format = detect_format(query_file)
+        if format == "unknown":
+            print(f'<p style="color:red;"><b>ERROR:</b> Could not detect structure format for query file ({query_file}). Please make sure the pdb or uniprot ID is valid.</p>')
+            sys.exit(1)
+        elif format == "PDBID":
+            try:
+                query_file = download_query_pdb(string,tmp_dir)
+            except Exception as e:
+                print(f'<p style="color:red;"><b>ERROR:</b> Could not download PDB structure for Query {string}. Please make sure the PDB ID is valid.</p>')
+                sys.exit(1)
+            # query_file = f"{query_file}.{format}"
+            # print(query_file)
+        elif format == "AF":
+            try:
+                query_file = download_AF_structure(string,tmp_dir,log_file_path=None)
+            except Exception as e:
+                print(f'<p style="color:red;"><b>ERROR:</b> Could not download AlphaFold structure for Query {string}. Please make sure the uniprot ID is valid.</p>')
+                sys.exit(1)
+
+
+        
     # Change "0" extension to ".pdb"/".cif" for web server
-    if args.QUERY.endswith(".0"):
-        old_query_path = args.QUERY
-        args.QUERY = detect_structure_format(old_query_path)
+    elif query_file.endswith(".0"):
+        old_query_path = query_file
+        query_file = detect_structure_format(old_query_path)
         # args.QUERY = args.QUERY[:-1] + "pdb"
-        new_query_path = args.QUERY
+        new_query_path = query_file
         if new_query_path.endswith("0"):
             print(f'<p style="color:red;"><b>ERROR:</b> Could not detect structure format for query file ({old_query_path}). Please make sure the file has a valid structure format extension (.pdb or .cif).</p>')
             sys.exit(1)
         os.rename(old_query_path, new_query_path)
-
+        # Validate arguments and inputs
+        if not validate_structure_file(query_file):
+            print(f'<p style="color:red;"><b>ERROR:</b> Could not open or read query file</p>')
+            sys.exit(1)
+    else:
+        # Validate arguments and inputs
+        if not validate_structure_file(query_file):
+            print(f'<p style="color:red;"><b>ERROR:</b> Could not open or read query file</p>')
+            sys.exit(1)
 
     if args.FOLDSEEK_DATABASES == []:
         if args.afdb50:
@@ -172,18 +227,41 @@ def main():
         if args.FOLDSEEK_DATABASES == []:
             args.FOLDSEEK_DATABASES = ["afdb50"]      
 
-    # Validate arguments and inputs
-    if not validate_structure_file(args.QUERY):
-        print(f'<p style="color:red;"><b>ERROR:</b> Could not open or read query file</p>')
-        sys.exit(1)
+
 
 
     if args.HOMOLOGY_SEARCH_METHOD == "user_specified":
-        if args.HOMOLOGS is None and args.HOMOLOGS_DIR is None:
-            print(f'<p style="color:red;"><b>ERROR:</b> Please provide either a list of homolog files or a directory containing homolog files when using user-specified homology search method.</p>')
+        if args.HOMOLOGS is None and args.HOMOLOGS_DIR is None and args.HOMOLOGS_ID is None:
+            print(f'<p style="color:red;"><b>ERROR:</b> Please provide either a list of homolog files / IDs or a directory containing homolog files when using user-specified homology search method.</p>')
             sys.exit(1)
-        elif args.HOMOLOGS is not None:
-            homologs = args.HOMOLOGS
+        elif args.HOMOLOGS_DIR is None:
+            if args.HOMOLOGS:
+                homologs = args.HOMOLOGS
+
+            elif args.HOMOLOGS_ID:
+                homologs = [
+                    x for x in re.split(r"[\s,]+", args.HOMOLOGS_ID.strip())
+                    if x
+                ]
+
+            # homologs = homologs.copy()
+            remove_indices = []
+            for i, homolog in enumerate(homologs):
+                if detect_format(homolog):
+                    string, format = detect_format(homolog)
+                    if format == "unknown":
+                        print(f'<p style="color:orange;"><b>WARNING:</b> Could not detect structure format for homolog file ({homolog}). Please make sure the pdb or uniprot ID is valid.</p>')
+                        remove_indices.append(i)
+                    elif format == "PDBID":
+                        homologs[i] = f"{homolog}.{format}"
+                    elif format == "AF":
+                        try:
+                            homologs[i] = download_AF_structure(string,tmp_dir,log_file_path=None)
+                        except Exception as e:
+                            print(f'<p style="color:orange;"><b>WARNING:</b> Could not download AlphaFold structure for Query {string}. Please make sure the uniprot ID is valid.</p>')
+                            remove_indices.append(i)
+            for i in reversed(remove_indices):
+                homologs.pop(i)
             
         else:
             homologs = [os.path.join(args.HOMOLOGS_DIR, hom_file) for hom_file in os.listdir(args.HOMOLOGS_DIR)]
@@ -291,7 +369,7 @@ def main():
 
     settings = [
         "EnZight run settings:",
-        f"Query = {args.QUERY}",
+        f"Query = {query_file}",
         f"job_key = {args.JOB_KEY}",
         f"result_dir = {args.RESULT_DIR}",
         f"tmp_dir = {args.TMP_DIR}",
@@ -313,7 +391,7 @@ def main():
 
 
     # Run EnZight
-    EnZight(query=args.QUERY,
+    EnZight(query=query_file,
              job_key=args.JOB_KEY,
              result_dir=zip_file_path,
              tmp_dir=tmp_dir,
