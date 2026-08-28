@@ -1,4 +1,5 @@
 import argparse
+from html import parser
 import os
 from core import EnZight
 import sys
@@ -158,6 +159,10 @@ def main():
         choices=["0", "1"],
         help="If set to 1, only hotspots in the core of the protein will be considered. If set to 0, all hotspots will be considered. Default is 1."
     )
+
+    # Add arguments for the web server
+    parser.add_argument("--QUERY_INPUT_METHOD")
+    parser.add_argument("--HOMOLOG_INPUT_METHOD")
 
     args = parser.parse_args()
 
