@@ -95,7 +95,7 @@ class Structure:
     
 
     def validate_structure_format(self):
-        """Validate the structure format and check for non-canonical amino acids."""
+        """Validate the structure format."""
         self.stored.residues = []
         self.cmd.iterate(self.name, "stored.residues.append(resi)")
         if [resi for resi in self.stored.residues if not resi.isdigit()]:
@@ -103,22 +103,33 @@ class Structure:
             print(f'<p style="color:orange;"><b>WARNING:</b> {error_msg}</p>')
             self.cmd.delete(self.name)
             return error_msg
+
         
+        fasta = self.pymol_build_in_get_fasta()
+        sequence = "".join(
+            line.strip()
+            for line in fasta.splitlines()
+            if not line.startswith(">")
+        )
 
+        if "X" in sequence:
 
-        if len(self.pymol_build_in_get_fasta()) != len(self.cmd.get_model(self.CA).atom):
-            error_msg = f"{self.name} was removed because the FASTA and CA atom counts do not match."
-            print(f'<p style="color:orange;"><b>WARNING:</b> {error_msg}</p>')
-            fasta_length = len(self.pymol_build_in_get_fasta())
-            ca_length = len(self.cmd.get_model(self.CA).atom)
-            print(f'<p style="color:orange;"><b>DETAILS:</b> Fasta length: {fasta_length}, CA atom length: {ca_length}</p>')
-            print(f"chain: {self.cmd.get_model(self.not_HETATM).atom[0].chain}\n")
-            print("Embedded FASTA:")
-            print(self.pymol_build_in_get_fasta())
-            print("CA atom FASTA:")
-            print(self.cmd.get_model(self.CA).atom)
-            print(f"\nTry running with a minimal PDB file. Remove any embedded FASTA-formatted sequence from the structure file and ensure that it contains only ATOM coordinate records.")
+            error_msg = (
+                f"{self.name} was removed because one or more residues "
+                f"could not be converted to a recognized one-letter "
+                f"amino-acid code."
+            )
+
+            print(
+                f'<p style="color:orange;"><b>WARNING:</b> '
+                f'{error_msg}</p>'
+            )
+
+            print(
+                f'<p style="color:orange;"><b>DETAILS:</b> '
+                f'Coordinate-derived sequence: {sequence}</p>'
+            )
+
             self.cmd.delete(self.name)
             return error_msg
-
         return None  # Validation passed

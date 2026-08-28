@@ -22,6 +22,7 @@ def main():
         help="Path to the query protein structure file (.pdb or .cif)."
     )
     parser.add_argument(
+        "-q-id",
         "--QUERY_ID",
         type=str,
         default=None,

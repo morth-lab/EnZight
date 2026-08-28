@@ -560,7 +560,8 @@ def get_core(structures, cmd):
         SurfaceResidues.add(residue[1])
 
     core = conserved_region - SurfaceResidues
-    return list(core)
+    return sorted(core)
+    
 
 def update_neighborAA_list(neighborAA_list, tmp_neighborAAs, count, residue, resi_list, index, align_seq_query, atomsCA_query, align_seq_template, atomsCA_template):
     neighborAAs = set()
