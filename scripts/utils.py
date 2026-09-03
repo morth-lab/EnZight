@@ -320,15 +320,16 @@ def loading_structures_to_pymol(structure_files,query,cmd,stored,log_file_path, 
         if type == "PDBID":
             try:
                 cmd.fetch(name)
+                cmd.remove(f"solvent and {name}")
                 remove_alt_conformations(cmd, name, keep_alts=("", "A"))
                 log_message(log_file_path, f"\tFetched: {name}")
-                Structure(name,cmd,stored).validate_structure_format()
+                err = Structure(name,cmd,stored).validate_structure_format()
             except Exception as e:
-                # if file == query_file:
-                #     print(f'<p style="color:red;"><b>ERROR:</b> Query structure {name} could not be fetched to PyMOL</p>')
-                #     sys.exit(1)
-                # else:
-                print(f'<p style="color:orange;"><b>WARNING:</b> {name} could not be fetched to PyMOL</p>')
+                if file == query_file:
+                    print(f'<p style="color:red;"><b>ERROR:</b> Query structure {name} could not be fetched to PyMOL</p>')
+                    sys.exit(1)
+                else:
+                    print(f'<p style="color:orange;"><b>WARNING:</b> {name} could not be fetched to PyMOL</p>')
 
 
 
@@ -361,9 +362,10 @@ def loading_structures_to_pymol(structure_files,query,cmd,stored,log_file_path, 
             try:
                 # Load the structure in PyMOL using the normalized path and name
                 cmd.load(normalized_path, name)
+                cmd.remove(f"solvent and {name}")
                 remove_alt_conformations(cmd, name, keep_alts=("", "A"))
                 log_message(log_file_path, f"\tLoaded: {name} from {normalized_path}")
-                Structure(name,cmd,stored).validate_structure_format()
+                err = Structure(name,cmd,stored).validate_structure_format()
             except Exception as e:
                 if file == query_file:
                     print(f'<p style="color:red;"><b>ERROR:</b> Query structure {name} could not be loaded in PyMOL</p>')
@@ -371,7 +373,9 @@ def loading_structures_to_pymol(structure_files,query,cmd,stored,log_file_path, 
                 else:
                     print(f'<p style="color:orange;"><b>WARNING:</b> {name} could not be loaded in PyMOL</p>')
                     log_message(log_file_path, f"\tFailed to load: {name} from {normalized_path}. Error: {e}")
-
+        if err and file == query_file:
+            print(f'<p style="color:red;"><b>ERROR:</b> {err}</p>')
+            sys.exit(1)
     canonicalize_resn(cmd)
     structures = []
     for struc in cmd.get_object_list():
