@@ -98,7 +98,8 @@ class Structure:
         """Validate the structure format."""
         self.stored.residues = []
         self.cmd.iterate(self.name, "stored.residues.append(resi)")
-        if [resi for resi in self.stored.residues if not resi.isdigit()]:
+
+        if [resi for resi in self.stored.residues if not resi.lstrip("-").isdigit()]:
             error_msg = f"{self.name} was removed due to invalid residues."
             print(f'<p style="color:orange;"><b>WARNING:</b> {error_msg}</p>')
             self.cmd.delete(self.name)
