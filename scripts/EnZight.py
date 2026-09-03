@@ -196,7 +196,7 @@ def main():
             try:
                 query_file = download_AF_structure(string,tmp_dir,log_file_path=None)
             except Exception as e:
-                print(f'<p style="color:red;"><b>ERROR:</b> Could not download AlphaFold structure for Query {string}. Please make sure the uniprot ID is valid.</p>')
+                print(f'<p style="color:red;"><b>ERROR:</b> Could not download AlphaFold structure for Query {string}. Please make sure the Uniprot ID is valid.</p>')
                 sys.exit(1)
 
 
@@ -264,7 +264,7 @@ def main():
                         try:
                             homologs[i] = download_AF_structure(string,tmp_dir,log_file_path=None)
                         except Exception as e:
-                            print(f'<p style="color:orange;"><b>WARNING:</b> Could not download AlphaFold structure for Query {string}. Please make sure the uniprot ID is valid.</p>')
+                            print(f'<p style="color:orange;"><b>WARNING:</b> Could not download AlphaFold structure for Query {string}. Please make sure the Uniprot ID is valid.</p>')
                             remove_indices.append(i)
             for i in reversed(remove_indices):
                 homologs.pop(i)

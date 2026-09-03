@@ -62,18 +62,33 @@ def validate_structure_file(file_path):
 
 def create_output_dirs(result_dir, tmp_dir):
     """Create output directories for results and temporary files."""
+
     try:
-        if not os.path.exists(result_dir):
-            os.makedirs(result_dir, exist_ok=True)
+        os.makedirs(result_dir, exist_ok=True)
     except OSError as e:
-        print(f'<p style="color:red;"><b>ERROR:</b> Could not create directories in {result_dir}: {e}</p>')
+        print(
+            f'<p style="color:red;"><b>ERROR:</b> '
+            f'Could not create directories in {result_dir}: {e}</p>'
+        )
         sys.exit(1)
+
     try:
-        if not os.path.exists(tmp_dir):
-            os.makedirs(tmp_dir, exist_ok=True)
+        original_tmp_dir = tmp_dir
+        count = 1
+
+        while os.path.exists(tmp_dir):
+            tmp_dir = f"{original_tmp_dir}_{count}"
+            count += 1
+
+        os.makedirs(tmp_dir)
+
     except OSError as e:
-        print(f'<p style="color:red;"><b>ERROR:</b> Could not create directories in {tmp_dir}: {e}</p>')
+        print(
+            f'<p style="color:red;"><b>ERROR:</b> '
+            f'Could not create directories in {tmp_dir}: {e}</p>'
+        )
         sys.exit(1)
+
     return os.path.abspath(tmp_dir), os.path.abspath(result_dir)
 
 ## Core functions
@@ -122,7 +137,8 @@ def download_AF_structure(name,outfolder,log_file_path):
     name = name.split(" ")[0].split(".")[0]
     type = "pdb"
     url = "https://alphafold.ebi.ac.uk/files/"+name+"."+type
-    log_message(log_file_path, f"Downloading {name} from AlphaFold DB...")
+    if log_file_path:
+        log_message(log_file_path, f"Downloading {name} from AlphaFold DB...")
     os.system(f"wget -P {outfolder} {url}")
     return os.path.join(outfolder, name+"."+type)
 
