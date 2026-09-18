@@ -361,6 +361,8 @@ def loading_structures_to_pymol(structure_files,query,cmd,stored,log_file_path, 
             
             try:
                 # Load the structure in PyMOL using the normalized path and name
+                if len(name) > 30:
+                    name = name[:30]  # Truncate the name to 30 characters
                 cmd.load(normalized_path, name)
                 cmd.remove(f"solvent and {name}")
                 remove_alt_conformations(cmd, name, keep_alts=("", "A"))
