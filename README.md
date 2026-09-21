@@ -51,8 +51,8 @@ python scripts/EnZight.py --QUERY query.pdb [options]
 | ------------------------------- | ------------------------------------------------------------------ | ------------- |
 | `--QUERY` `-q`                  | Path to input structure file (`.pdb` or `.cif`). Alternatively, use `--QUERY_ID` with a PDB or UniProt ID. | `None` |
 | `--QUERY_ID` `-q-id`                    | PDB or UniProt ID for the query structure. Alternatively, use `--QUERY` with a local `.pdb` or `.cif` file. | `None` |
-| `--HOMOLOGS` `-hom`            | Two or more homolog structure files (`.pdb` or `.cif`) for `user_specified`. Multiple files should be provided as a space-separated list. A ZIP file containing `.pdb` or `.cif` homolog structures is also accepted. | `None` |
-| `--HOMOLOGS_ID` `-hom-id`                | Two or more PDB or UniProt IDs for homologs when using `user_specified`. Multiple IDs should be provided as a space-separated list. | `None` |
+| `--HOMOLOGS` `-hom`            | Two or more homolog structure files (`.pdb` or `.cif`) for `user_specified`. Multiple files should be provided as a comma-separated list. A ZIP file containing `.pdb` or `.cif` homolog structures is also accepted. | `None` |
+| `--HOMOLOGS_ID` `-hom-id`                | Two or more PDB or UniProt IDs for homologs when using `user_specified`. Multiple IDs should be provided as a comma-separated list. | `None` |
 | `--HOMOLOGS_DIR` `-hom-dir`      | Directory of `.pdb` or `.cif` homolog files (for `user_specified`).                | `None`        |
 | `--HOMOLOGY_SEARCH_METHOD` `-H` | `foldseek` or `user_specified`.                                    | `foldseek`    |
 | `--MAX_DISTANCE` `-d`           | Distance threshold for gap detection (Å).                          | `5`           |
