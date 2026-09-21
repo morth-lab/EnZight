@@ -97,19 +97,21 @@ The substitution hotspot table lists predicted non-disrupting amino acid substit
 * `<JOB_KEY>_log.txt` – Log file
 * Homolog AlphaFold structures if you used `foldseek`
 
-<!-- ## Citation
+## Citation
 
-Please cite our [publication](https://services.healthtech.dtu.dk/services/SIMAlign-1.0/) if you use SIMalign:
+Please cite our [publication](https://doi.org/10.64898/2026.09.10.750651) if you use EnZight:
 
 ```bibtex
-@article{ostergaard2025simplicity,
-  title={SIMalign: Structure-based alignment and hotspot prediction for protein engineering},
-  author={Ostergaard, M. et al.},
-  journal={Journal of Molecular Biology},
-  year={2025},
-  doi={10.1016/j.jmb.2025.03.012}
+@article {ostergaard2026enzight,
+	author = {{\O}stergaard, Rune Rahbek and Jensen, Mikkel Lyskj{\ae}r and Siebenhaar, Suzana and Bicer, Deniz and Sackett, Peter Wad and Andersen, Alexander and Tiberti, Matteo and Papaleo, Elena and Robinson, Serina and Thirup, S{\o}ren Skou and Westh, Peter and Rotilio, Laura and Morth, Jens Preben},
+	title = {EnZight: A Structure-Guided Algorithm to Identify and Prioritize Substitution Hotspots for Enzyme Engineering},
+	elocation-id = {2026.09.10.750651},
+	year = {2026},
+	doi = {10.64898/2026.09.10.750651},
+	publisher = {Cold Spring Harbor Laboratory},
+	journal = {bioRxiv}
 }
-``` -->
+```
 
 
 ## Acknowledgments
