@@ -397,7 +397,7 @@ def main():
 
 
     # Run EnZight
-    EnZight(query=query_file,
+    identity_matrix_file = EnZight(query=query_file,
              job_key=args.JOB_KEY,
              result_dir=zip_file_path,
              tmp_dir=tmp_dir,
@@ -423,6 +423,7 @@ def main():
     document_root = "/var/www/services"
     download_path = zip_file_path.replace(document_root, "")
     print('<img src="https://raw.githubusercontent.com/morth-lab/EnZight/main/logo.svg" width="200">')
+    print(f'<img src="{identity_matrix_file}" width="600">')
     print(f'<a href="{download_path}.zip" download>Download here</a>')
 
 

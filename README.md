@@ -92,10 +92,12 @@ The substitution hotspot table lists predicted non-disrupting amino acid substit
 * `hotspots_mode_1.html` – Single substitution hotspot report
 * `hotspots_mode_2.html` – Double substitution hotspot report
 * `scores.json` – Per-residue similarity scores (EnZight score)
-* `sequences.fasta` – Query and homolog sequences (fasta format)
+* `sequences.fasta` – Query and homolog sequences (FASTA format)
 * `EnZight_<JOB_KEY>.pse` – PyMOL session file
 * `<JOB_KEY>_log.txt` – Log file
 * Homolog AlphaFold structures if you used `foldseek`
+* `tree.nwk` – Neighbor-joining phylogenetic tree in Newick format
+* `identity_matrix.svg` – Pairwise sequence identity matrix in SVG format
 
 ## Citation
 

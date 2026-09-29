@@ -5,7 +5,7 @@ import pymol2
 
 from utils import foldseek_API_search, loading_structures_to_pymol, super_impose_structures, calculate_similarity_score, update_alignment_in_pymol, get_neighborAA, finding_hotspots, save_hotspot, format_pymol, save_scores_as_json
 
-from utils import run_muscle, write_fasta, alignment_to_dict, update_msa, log_message, select_hotspots_in_pymol
+from utils import run_muscle, write_fasta, alignment_to_dict, update_msa, log_message, select_hotspots_in_pymol, plot_identity_matrix, make_tree
 
 from models import StructureFile, Structure
 
@@ -80,6 +80,12 @@ def EnZight(query, job_key, result_dir, tmp_dir="tmp", homologs=None, homology_s
         # print("Neighbor AA list:", neighborAA_list)
         # print("Core:", core)
         # print("Core index:", core_index)
+        identity_matrix_file = os.path.join(result_dir, "identity_matrix.svg")
+        plot_identity_matrix(aln_file=alignment_file_name, out_file=identity_matrix_file)
+        tree_file = os.path.join(result_dir, "tree.nwk")
+        svg_file = os.path.join(result_dir, "tree.svg")
+        make_tree(aln_file=alignment_file_name,
+              tree_file=tree_file)
             
         # Finding double mutations
         hotspot_list_double = finding_hotspots(neighborAA_list, align, structures, core, core_index, only_core, mode=2)
@@ -102,4 +108,4 @@ def EnZight(query, job_key, result_dir, tmp_dir="tmp", homologs=None, homology_s
 
         cmd.util.cnc(_self=cmd)
         cmd.save(os.path.join(result_dir,"EnZight_"+job_key+".pse"))
- 
+    return identity_matrix_file

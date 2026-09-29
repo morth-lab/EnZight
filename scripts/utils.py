@@ -306,6 +306,30 @@ def download_query_pdb(string,tmp_dir):
         print(f'<p style="color:red;"><b>ERROR:</b> Could not download PDB structure for Query {string}. Please make sure the PDB ID is valid. Error: {e}</p>')
         sys.exit(1)
 
+def keep_first_chain(cmd, name):
+    """Keep only the first protein chain and warn if others are removed."""
+    model = cmd.get_model(f"{name} and polymer.protein and name CA")
+
+    if not model.atom:
+        return
+
+    chains = []
+    for atom in model.atom:
+        if atom.chain not in chains:
+            chains.append(atom.chain)
+
+    first_chain = chains[0]
+
+    if len(chains) > 1:
+        removed = ", ".join(chains[1:])
+        print(
+            f'<p style="color:orange;"><b>WARNING:</b> '
+            f'{name} contains multiple protein chains. '
+            f'Keeping chain {first_chain} and removing chain(s): {removed}.</p>'
+        )
+
+        cmd.remove(f"{name} and not chain {first_chain}")
+
 
 def loading_structures_to_pymol(structure_files,query,cmd,stored,log_file_path, query_file):
             
@@ -322,6 +346,7 @@ def loading_structures_to_pymol(structure_files,query,cmd,stored,log_file_path, 
                 cmd.fetch(name)
                 cmd.remove(f"solvent and {name}")
                 remove_alt_conformations(cmd, name, keep_alts=("", "A"))
+                keep_first_chain(cmd, name)
                 log_message(log_file_path, f"\tFetched: {name}")
                 err = Structure(name,cmd,stored).validate_structure_format()
             except Exception as e:
@@ -366,6 +391,7 @@ def loading_structures_to_pymol(structure_files,query,cmd,stored,log_file_path, 
                 cmd.load(normalized_path, name)
                 cmd.remove(f"solvent and {name}")
                 remove_alt_conformations(cmd, name, keep_alts=("", "A"))
+                keep_first_chain(cmd, name)
                 log_message(log_file_path, f"\tLoaded: {name} from {normalized_path}")
                 err = Structure(name,cmd,stored).validate_structure_format()
             except Exception as e:
@@ -1427,3 +1453,69 @@ def alignment_to_dict(alignment_path, structures, alignment_format="fasta"):
                 structures_pos_added[struc.name] += 1
         msa_dicts.append(msa_dict)
     return msa_dicts
+
+
+
+import matplotlib.pyplot as plt
+
+def plot_identity_matrix(aln_file="alignment.aln", out_file="identity_matrix.svg"):
+    aln = AlignIO.read(aln_file, "clustal")
+    names = [s.id for s in aln]
+
+    identity = np.zeros((len(aln), len(aln)))
+
+    for i, a in enumerate(aln):
+        for j, b in enumerate(aln):
+            valid = [(x, y) for x, y in zip(a.seq, b.seq) if x != "-" and y != "-"]
+            identity[i, j] = 100 * sum(x == y for x, y in valid) / len(valid)
+
+    fig, ax = plt.subplots(figsize=(10, 8))
+    im = ax.imshow(identity, cmap="coolwarm_r", vmin=0, vmax=100)
+
+    ax.set_xticks(range(len(names)), names, rotation=90)
+    ax.set_yticks(range(len(names)), names)
+
+    for i in range(len(names)):
+        for j in range(len(names)):
+            ax.text(j, i, f"{identity[i, j]:.1f}", ha="center", va="center", fontsize=8)
+
+    plt.colorbar(im, label="Sequence identity (%)")
+    plt.tight_layout()
+    plt.savefig(out_file, format="svg")
+    plt.close(fig)
+
+from Bio import AlignIO, Phylo
+from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceTreeConstructor
+import matplotlib.pyplot as plt
+
+def make_tree(aln_file="alignment.aln",
+              tree_file="tree.nwk"):
+
+    aln = AlignIO.read(aln_file, "clustal")
+
+    dm = DistanceCalculator("identity").get_distance(aln)
+    tree = DistanceTreeConstructor().nj(dm)
+
+    # Remove names like Inner1, Inner2, ...
+    for clade in tree.get_nonterminals():
+        clade.name = None
+
+    # Mark tree as unrooted
+    tree.rooted = False
+
+    Phylo.write(tree, tree_file, "newick")
+
+    fig = plt.figure(figsize=(10, 8))
+    ax = fig.add_subplot(111)
+
+    Phylo.draw(
+        tree,
+        axes=ax,
+        do_show=False,
+        label_func=lambda x: x.name if x.is_terminal() else None
+    )
+
+    plt.tight_layout()
+    plt.close(fig)
+
+    return tree
