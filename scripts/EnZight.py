@@ -422,6 +422,7 @@ def main():
 
     document_root = "/var/www/services"
     download_path = zip_file_path.replace(document_root, "")
+    identity_matrix_file = identity_matrix_file.replace(document_root, "")
     print('<img src="https://raw.githubusercontent.com/morth-lab/EnZight/main/logo.svg" width="200">')
     print(f'<img src="{identity_matrix_file}" width="600">')
     print(f'<a href="{download_path}.zip" download>Download here</a>')
